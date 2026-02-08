@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emoji Scroll - Synth Music Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --money: #4ad66d;
+            --common: #94a3b8; --rare: #3b82f6; --super-rare: #a855f7; --epic: #ec4899;
+            --legendary: #f59e0b; --mythical: #ef4444; --exotic: #10b981; --og: #facc15;
+            --gold: #ffd700; --diamond: #00d4ff;
+        }
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; user-select: none; }
+        html, body { min-height: 100%; overflow-y: auto; margin: 0; background: #0f172a; color: #fff; display: flex; flex-direction: column; align-items: center; }
+        .game-wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; padding: 20px 20px 100px 20px; }
+        .hud { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 10px; z-index: 10; }
+        .money-badge { background: #000; padding: 10px 15px; border-radius: 50px; border: 3px solid var(--money); font-size: 1.1rem; font-weight: 800; color: var(--money); min-width: 140px; text-align: center; }
+        
+        #phone { width: 100%; max-width: 310px; height: 420px; background: var(--card); border-radius: 50px; border: 10px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 25px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin: 10px 0; border-style: double; }
+        
+        .btn { padding: 12px; border: none; border-radius: 15px; font-weight: 800; cursor: pointer; width: 100%; color: white; text-transform: uppercase; transition: 0.1s; border-bottom: 4px solid rgba(0,0,0,0.3); }
+        .btn:active { transform: translateY(2px); border-bottom-width: 0; }
+        .panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: none; flex-direction: column; padding: 25px; z-index: 100; overflow-y: auto; }
+        .panel.open { display: flex; }
+        .emoji-card { background: #1e293b; margin-bottom: 10px; padding: 15px; border-radius: 20px; display: flex; align-items: center; border-left: 6px solid transparent; }
+        
+        .mut-gold { filter: drop-shadow(0 0 10px var(--gold)); color: var(--gold) !important; }
+        .mut-diamond { filter: drop-shadow(0 0 10px var(--diamond)); color: var(--diamond) !important; }
+        .mut-rainbow { animation: rb-anim 2s infinite linear; }
+        @keyframes rb-anim { 0% { filter: hue-rotate(0deg) drop-shadow(0 0 10px red); } 100% { filter: hue-rotate(360deg) drop-shadow(0 0 10px red); } }
+    </style>
+</head>
+<body>
+
+    <button style="position:fixed; top:20px; right:20px; background:rgba(0,0,0,0.5); border:2px solid white; color:white; border-radius:50%; width:45px; height:45px; z-index:50; cursor:pointer;" onclick="togglePanel('settingsPanel')">⚙️</button>
+
+    <div class="game-wrapper">
+        <div class="hud">
+            <div class="luck-badge" style="background:rgba(30,41,59,0.9); padding:10px; border-radius:15px; border:2px solid var(--accent); color:var(--accent); font-weight:800;">🍀 x<span id="luckDisplay">1</span></div>
+            <div class="money-badge" id="moneyDisplay">100 $</div>
+        </div>
+
+        <div id="phone">
+            <div style="text-align:center">
+                <div id="rarityTag" style="padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:800; display:inline-block; margin-bottom:5px;">COMMON</div>
+                <h2 id="emojiName" style="margin:0; font-size:1.1rem;">-</h2>
+            </div>
+            <div id="emojiDisplay" onclick="buyCurrentEmoji()" style="cursor:pointer; font-size:80px;">❓</div>
+            <div style="text-align:center; width:100%">
+                <div id="mutationTag" style="font-size:0.8rem; font-weight:800; height:20px"></div>
+                <div id="emojiGain" style="color:var(--money); font-weight:800">+0/s</div>
+                <div id="emojiPrice" style="opacity:0.6; font-size:0.8rem; margin-bottom:8px">0 $</div>
+                <button class="btn" style="background:var(--accent); color:#0f172a" onclick="scrollAction()">SCROLL</button>
+            </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin:15px 0;">
+            <button class="btn" style="width:50px; background:#334155" onclick="changePhone(-1)">◀</button>
+            <div id="phoneName" style="font-weight:800; color:var(--accent); min-width:140px; text-align:center;">Nokia 3310</div>
+            <button class="btn" style="width:50px; background:#334155" onclick="changePhone(1)">▶</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; width:100%">
+            <button class="btn" style="background:#334155; font-size:0.7rem" onclick="togglePanel('inventory')">SAC (<span id="slotsCount">0/4</span>)</button>
+            <button class="btn" style="background:#334155; font-size:0.7rem" onclick="togglePanel('indexPanel')">INDEX</button>
+            <button class="btn" style="background:var(--super-rare); font-size:0.7rem" onclick="togglePanel('rebirthPanel')">REBIRTH</button>
+        </div>
+    </div>
+
+    <div id="rebirthPanel" class="panel">
+        <h2 style="text-align:center">RENAISSANCE</h2>
+        <div class="rb-info-box rb-loss" style="padding:10px; border:1px solid red; margin-bottom:10px;"><b>⚠️ PERTE :</b> Argent et Sac réinitialisés.</div>
+        <div class="rb-info-box rb-gain" style="padding:10px; border:1px solid green; margin-bottom:10px;"><b>💎 GAIN :</b> Nouveau Tél, +2 places, Gains x4.</div>
+        <div id="rbRequirements" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:15px; margin-bottom:20px; font-size:0.9rem"></div>
+        <button id="rbBtn" class="btn" style="background:var(--money)" onclick="doRebirth()" disabled>RENAÎTRE</button>
+        <button class="btn" style="background:#334155; margin-top:10px" onclick="togglePanel('rebirthPanel')">ANNULER</button>
+    </div>
+
+    <div id="inventory" class="panel"><h2 style="text-align:center">SAC</h2><div id="totalBaseGain" style="text-align:center; color:var(--money); font-weight:800; margin-bottom:15px">0 $/s</div><div id="inventoryList"></div><button class="btn" style="background:#334155; margin-top:auto" onclick="togglePanel('inventory')">RETOUR</button></div>
+    <div id="indexPanel" class="panel"><h2 style="text-align:center">COLLECTION</h2><div id="indexList"></div><button class="btn" style="background:#334155; margin-top:20px" onclick="togglePanel('indexPanel')">RETOUR</button></div>
+
+    <div id="settingsPanel" class="panel">
+        <h2 style="text-align:center">SETTINGS</h2>
+        <button id="sfxBtn" class="btn" style="background:var(--accent); margin-bottom:15px" onclick="toggleSfx()">🔊 SONS : OFF</button>
+        <button id="musicBtn" class="btn" style="background:var(--super-rare); margin-bottom:15px" onclick="toggleMusic()">🎵 MUSIQUE : OFF</button>
+        <div style="margin-top:auto; text-align:center; opacity:0.5; font-size:0.8rem;">Sauvegarde automatique activée ✅</div>
+        <button class="btn" style="background:#334155; margin-top:10px" onclick="togglePanel('settingsPanel')">FERMER</button>
+    </div>
+
+<script>
+let money = 100, inventory = [], unlocked = new Set(), rebirthLevel = 0, currentPhoneIdx = 0, totalSlots = 4, currentEmoji = null;
+let audioCtx = null, isMusicOn = false, isSfxOn = false, musicStarted = false;
+
+// VARIABLES MUSIQUE SYNTHÉTIQUE
+let musicTimeout = null;
+let noteIndex = 0;
+const melody = [261.63, 329.63, 392.00, 440.00, 523.25, 587.33, 523.25, 440.00, 392.00, 329.63]; // 10 notes en boucle
+const tempo = 450; 
+
+const EMOJI_MASTER_LIST = {
+    "Common": [{s:"😀",n:"Smile"},{s:"😃",n:"Happy"},{s:"😄",n:"Joy"},{s:"😁",n:"Grin"},{s:"😆",n:"LMAO"},{s:"😅",n:"Sweat"},{s:"😂",n:"Tears"},{s:"🤣",n:"Rolling"},{s:"😊",n:"Blush"},{s:"😇",n:"Angel"}],
+    "Rare": [{s:"🙂",n:"Small"},{s:"🙃",n:"Upside"},{s:"😉",n:"Wink"},{s:"😌",n:"Calm"},{s:"😍",n:"Love"},{s:"🥰",n:"Hearts"},{s:"😘",n:"Kiss"},{s:"😗",n:"Pout"},{s:"😙",n:"Whistle"},{s:"😚",n:"Closed"}],
+    "Super Rare": [{s:"🤩",n:"Stars"},{s:"🥳",n:"Party"},{s:"😎",n:"Cool"},{s:"🤓",n:"Nerd"},{s:"🧐",n:"Monocle"},{s:"😏",n:"Smirk"},{s:"😒",n:"Meh"},{s:"😞",n:"Sad"},{s:"😔",n:"Pensive"},{s:"😟",n:"Worried"}],
+    "Epic": [{s:"😤",n:"Steam"},{s:"😢",n:"Cry"},{s:"😭",n:"Sob"},{s:"😱",n:"Shock"},{s:"😨",n:"Fear"},{s:"😰",n:"Stress"},{s:"😳",n:"Blushy"},{s:"🥵",n:"Hot"},{s:"🥶",n:"Cold"},{s:"😡",n:"Rage"}],
+    "Legendary": [{s:"💀",n:"Skull"},{s:"☠️",n:"Pirate"},{s:"👻",n:"Ghost"},{s:"👽",n:"Alien"},{s:"🤖",n:"Robot"},{s:"🎃",n:"Pumpkin"},{s:"😺",n:"Chat"},{s:"😸",n:"Rieur"},{s:"😹",n:"Pleureur"},{s:"😻",n:"Amoureux"}],
+    "Mythical": [{s:"🦊",n:"Renard"},{s:"🐱",n:"Chaton"},{s:"🐶",n:"Chien"},{s:"🐵",n:"Singe"},{s:"🐸",n:"Grenouille"},{s:"🐯",n:"Tigre"},{s:"🦁",n:"Lion"},{s:"🐷",n:"Cochon"},{s:"🐮",n:"Vache"},{s:"🐔",n:"Poule"}],
+    "Exotic": [{s:"🐧",n:"Pingu"},{s:"🐦",n:"Oiseau"},{s:"🦉",n:"Chouette"},{s:"🐴",n:"Cheval"},{s:"🦄",n:"Licorne"},{s:"🚀",n:"Fusee"},{s:"💎",n:"Diamant"},{s:"⚡",n:"Eclair"}],
+    "OG": [{s:"🔥",n:"Feu"},{s:"🌟",n:"Etoile"},{s:"💫",n:"Orbe"},{s:"✨",n:"Brille"},{s:"🌈",n:"Arc"},{s:"☀️",n:"Soleil"},{s:"🌕",n:"Lune"},{s:"🍀",n:"Trefle"},{s:"🏆",n:"Trophee"},{s:"🥇",n:"Or"}]
+};
+
+const PHONES = [{n:"Nokia 3310", l:1, c:"#334155"}, {n:"iPhone 4", l:10, c:"#94a3b8"}, {n:"Galaxy S8", l:20, c:"#3b82f6"}, {n:"iPhone 12", l:30, c:"#a855f7"}, {n:"Pixel 7", l:40, c:"#ec4899"}, {n:"S24 Ultra", l:50, c:"#f59e0b"}, {n:"iPhone 15 Pro", l:60, c:"#ef4444"}, {n:"Nothing Phone", l:70, c:"#10b981"}];
+const RARITY_DATA = { "Common": {c:"#94a3b8",p:60}, "Rare": {c:"#3b82f6",p:450}, "Super Rare": {c:"#a855f7",p:4000}, "Epic": {c:"#ec4899",p:35000}, "Legendary": {c:"#f59e0b",p:6e5}, "Mythical": {c:"#ef4444",p:1.5e7}, "Exotic": {c:"#10b981",p:2e10}, "OG": {c:"#facc15",p:3e14} };
+const RB_REQS = [{m:5000,r:"Common"},{m:50000,r:"Rare"},{m:500000,r:"Super Rare"},{m:5e6,r:"Epic"},{m:1e8,r:"Legendary"}];
+
+function format(n) { if(n<1000) return Math.floor(n); const units=["K","M","B","T"]; const i=Math.floor(Math.log10(n)/3)-1; return (n/Math.pow(1000,i+1)).toFixed(1)+units[i]; }
+
+function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+function playSfx(f, type="sine", d=0.1) { 
+    if(!audioCtx) return; 
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain(); 
+    o.type=type; o.frequency.setValueAtTime(f, audioCtx.currentTime); 
+    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+d); 
+    o.connect(g); g.connect(audioCtx.destination); 
+    o.start(); o.stop(audioCtx.currentTime+d); 
+}
+
+// NOUVELLE FONCTION MUSIQUE EN BOUCLE
+function toggleMusic() { 
+    initAudio();
+    isMusicOn = !isMusicOn; 
+    document.getElementById("musicBtn").textContent = isMusicOn ? "🎵 MUSIQUE : ON" : "🎵 MUSIQUE : OFF";
+
+    if(isMusicOn) {
+        const playNext = () => {
+            if(!isMusicOn) return;
+            playSfx(melody[noteIndex], "sine", 0.5);
+            noteIndex = (noteIndex + 1) % melody.length;
+            musicTimeout = setTimeout(playNext, tempo);
+        };
+        playNext();
+    } else {
+        clearTimeout(musicTimeout);
+        musicTimeout = null;
+    }
+}
+
+function scrollAction() { 
+    initAudio(); 
+    if(!musicStarted) {
+        musicStarted = true;
+        // La musique ne se lance pas toute seule, on laisse l'utilisateur cliquer sur le bouton Settings
+    }
+    if(isSfxOn) playSfx(1200, "sine", 0.05); 
+    generateEmoji(); 
+}
+
+function generateEmoji() {
+    let luck = PHONES[currentPhoneIdx].l;
+    let roll = Math.random() * 100, sel = "Common";
+    const rarities = ["OG","Exotic","Mythical","Legendary","Epic","Super Rare","Rare"];
+    const chances = [0.001, 0.01, 0.1, 1, 4, 10, 25];
+    for(let i=0; i<rarities.length; i++) { if(roll < chances[i] * luck) { sel = rarities[i]; break; } }
+    
+    const pool = EMOJI_MASTER_LIST[sel], eIdx = Math.floor(Math.random()*pool.length), d = pool[eIdx];
+    let boost = Math.pow(4, rebirthLevel);
+    let price = RARITY_DATA[sel].p * boost * (1 + eIdx * 0.1);
+    
+    let mutRoll = Math.random() * 100, mut = {n:"", m:1, c:""};
+    if(mutRoll < 1) mut = {n:"ARC-EN-CIEL", m:10, c:"mut-rainbow"};
+    else if(mutRoll < 4) mut = {n:"DIAMANT", m:4, c:"mut-diamond"};
+    else if(mutRoll < 14) mut = {n:"OR", m:2, c:"mut-gold"};
+
+    currentEmoji = { symbol: d.s, name: d.n, rarity: sel, color: RARITY_DATA[sel].c, price: price, gain: (price / 20) * mut.m, mutName: mut.n, mutClass: mut.c, mutMult: mut.m };
+    render();
+}
+
+function render() {
+    document.getElementById("phoneName").textContent = PHONES[currentPhoneIdx].n;
+    document.getElementById("phone").style.borderColor = PHONES[currentPhoneIdx].c;
+    document.getElementById("luckDisplay").textContent = PHONES[currentPhoneIdx].l;
+    const disp = document.getElementById("emojiDisplay");
+    disp.textContent = currentEmoji.symbol; disp.className = currentEmoji.mutClass;
+    document.getElementById("emojiName").textContent = currentEmoji.name;
+    document.getElementById("mutationTag").textContent = currentEmoji.mutName;
+    document.getElementById("mutationTag").style.color = currentEmoji.mutMult > 1 ? (currentEmoji.mutMult == 4 ? 'var(--diamond)' : (currentEmoji.mutMult == 10 ? '#ff00ff' : 'var(--gold)')) : 'transparent';
+    document.getElementById("emojiPrice").textContent = format(currentEmoji.price)+" $";
+    document.getElementById("emojiGain").textContent = "+"+format(currentEmoji.gain)+"/s";
+    const tag = document.getElementById("rarityTag"); tag.textContent = currentEmoji.rarity; tag.style.background = currentEmoji.color;
+    document.getElementById("moneyDisplay").textContent = format(money)+" $";
+    document.getElementById("slotsCount").textContent = inventory.length+"/"+totalSlots;
+}
+
+function buyCurrentEmoji() { 
+    initAudio();
+    if(inventory.length < totalSlots && money >= currentEmoji.price) { 
+        money -= currentEmoji.price; 
+        inventory.push({...currentEmoji}); 
+        unlocked.add(currentEmoji.symbol); 
+        if(isSfxOn) playSfx(800, "square"); 
+        generateEmoji(); 
+    } else { if(isSfxOn) playSfx(150, "sawtooth"); }
+}
+
+function togglePanel(id) { 
+    initAudio();
+    const p = document.getElementById(id);
+    if(isSfxOn) playSfx(p.classList.contains('open') ? 300 : 600, "triangle");
+    p.classList.toggle('open'); 
+    if(id==='inventory') updateInv(); 
+    if(id==='rebirthPanel') updateRB(); 
+    if(id==='indexPanel') updateIndex(); 
+}
+
+function updateInv() {
+    let totalG = 0;
+    document.getElementById("inventoryList").innerHTML = inventory.map((e, i)=> {
+        totalG += e.gain;
+        return `<div class="emoji-card" style="border-left-color:${e.color}">
+            <span style="font-size:1.8rem" class="${e.mutClass}">${e.symbol}</span> 
+            <div style="margin-left:15px; flex:1"><b>${e.name} ${e.mutMult>1?'('+e.mutMult+'x)':''}</b><br><span style="color:var(--money)">+${format(e.gain)} $/s</span></div>
+            <button class="btn" style="width:35px; height:35px; padding:0; background:#ef4444" onclick="removeEmoji(${i})">✕</button>
+        </div>`
+    }).join('') || "<p style='text-align:center; opacity:0.5'>Vide</p>";
+    document.getElementById("totalBaseGain").textContent = format(totalG) + " $/s";
+}
+
+function updateIndex() {
+    let h = ""; 
+    for(const r in EMOJI_MASTER_LIST) { 
+        h += `<h4 style="color:${RARITY_DATA[r].c}; margin:15px 0 5px 0">${r.toUpperCase()}</h4><div style="display:grid; grid-template-columns: repeat(5,1fr); gap:8px">`; 
+        EMOJI_MASTER_LIST[r].forEach(e => { 
+            const has = unlocked.has(e.s); 
+            h += `<div style="background:rgba(255,255,255,0.05); aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:1.5rem; opacity:${has?1:0.1}">${has?e.s:'?'}</div>`; 
+        }); h += `</div>`; 
+    } 
+    document.getElementById("indexList").innerHTML = h;
+}
+
+function removeEmoji(i) { inventory.splice(i, 1); if(isSfxOn) playSfx(200); updateInv(); render(); }
+
+function updateRB() {
+    const d = RB_REQS[rebirthLevel];
+    if(!d) { document.getElementById("rbRequirements").innerHTML = "MAX ATTEINT !"; return; }
+    const count = inventory.filter(e => e.rarity === d.r).length;
+    const okM = money >= d.m, okE = count >= 2;
+    document.getElementById("rbRequirements").innerHTML = `<b>REQUIS :</b><br>• Argent : ${format(money)} / ${format(d.m)} $ ${okM?'✅':'❌'}<br>• 2 Emojis ${d.r} dans le sac (${count}/2) ${okE?'✅':'❌'}`;
+    document.getElementById("rbBtn").disabled = !(okM && okE);
+}
+
+function doRebirth() { 
+    if(isSfxOn) playSfx(1000, "square", 0.5); 
+    rebirthLevel++; totalSlots += 2; 
+    money = 100 * Math.pow(10, rebirthLevel); 
+    inventory = []; currentPhoneIdx = rebirthLevel; 
+    togglePanel('rebirthPanel'); generateEmoji(); 
+}
+
+function changePhone(dir) { 
+    initAudio();
+    let next = currentPhoneIdx + dir; 
+    if(next >= 0 && next <= rebirthLevel && next < PHONES.length) { 
+        if(isSfxOn) playSfx(700, "triangle"); currentPhoneIdx = next; generateEmoji(); 
+    } else { if(isSfxOn) playSfx(100); }
+}
+
+function toggleSfx() { initAudio(); isSfxOn = !isSfxOn; document.getElementById("sfxBtn").textContent = isSfxOn ? "🔊 SONS : ON" : "🔊 SONS : OFF"; if(isSfxOn) playSfx(600); }
+
+function save() { 
+    localStorage.setItem('emoji_ultimate_v2', JSON.stringify({money, inventory, unlocked: Array.from(unlocked), rebirthLevel, currentPhoneIdx, totalSlots, isSfxOn, isMusicOn})); 
+}
+function load() { 
+    const s=localStorage.getItem('emoji_ultimate_v2'); 
+    if(s){ 
+        const d=JSON.parse(s); money=d.money; inventory=d.inventory; unlocked=new Set(d.unlocked); rebirthLevel=d.rebirthLevel; currentPhoneIdx=d.currentPhoneIdx; totalSlots=d.totalSlots; 
+        isSfxOn = d.isSfxOn; 
+        document.getElementById("sfxBtn").textContent = isSfxOn ? "🔊 SONS : ON" : "🔊 SONS : OFF";
+        // On ne relance pas la musique automatiquement pour éviter les blocages navigateurs
+        isMusicOn = false; 
+        document.getElementById("musicBtn").textContent = "🎵 MUSIQUE : OFF";
+    } 
+}
+
+window.addEventListener('beforeunload', save);
+setInterval(save, 10000);
+
+setInterval(() => { 
+    let secGain = 0;
+    inventory.forEach(e => { secGain += e.gain; });
+    money += (secGain / 10);
+    document.getElementById("moneyDisplay").textContent = format(money) + " $";
+}, 100);
+
+load(); generateEmoji();
+</script>
+</body>
+</html>
