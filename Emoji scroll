@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Emoji Scroll — Ultra Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e1a;--card:#141c32;--accent:#00d4ff;--money:#39ff7e;
+  --common:#94a3b8;--rare:#3b82f6;--srare:#a855f7;--epic:#ec4899;
+  --legendary:#f59e0b;--mythique:#f43f5e;--exotic:#f97316;--og:#facc15;
+  --glass:rgba(255,255,255,.04);--gb:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box;font-family:'Nunito',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html{font-size:15px;}@media(min-width:768px){html{font-size:17px;}}
+body{background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(0,212,255,.04),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(168,85,247,.05),transparent 60%);color:#fff;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;min-height:100vh;}
+
+/* PARTICLES */
+#ptcls{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.pt{position:absolute;border-radius:50%;animation:floatPt linear infinite;opacity:0;}
+@keyframes floatPt{0%{transform:translateY(100vh) scale(0);opacity:0;}10%{opacity:.5;}90%{opacity:.2;}100%{transform:translateY(-20px);opacity:0;}}
+
+/* EVENT BG */
+#evBg{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity 1s;}
+#evBg.on{opacity:1;}
+.ebg-money{background:radial-gradient(ellipse at center,rgba(57,255,126,.08),transparent 70%);}
+.ebg-luck{background:radial-gradient(ellipse at center,rgba(0,212,255,.08),transparent 70%);}
+.ebg-mut{background:radial-gradient(ellipse at center,rgba(255,0,255,.08),transparent 70%);}
+.ebg-rainbow{animation:bgRainbow 4s linear infinite;}
+@keyframes bgRainbow{0%{background:radial-gradient(ellipse at center,rgba(255,50,50,.07),transparent 70%);}25%{background:radial-gradient(ellipse at center,rgba(57,255,126,.07),transparent 70%);}50%{background:radial-gradient(ellipse at center,rgba(0,212,255,.07),transparent 70%);}75%{background:radial-gradient(ellipse at center,rgba(255,0,255,.07),transparent 70%);}100%{background:radial-gradient(ellipse at center,rgba(255,50,50,.07),transparent 70%);}}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;transition:opacity .6s;}
+.spl-logo{font-family:'Bebas Neue';font-size:3.5rem;letter-spacing:4px;background:linear-gradient(135deg,#00d4ff,#a855f7,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.spl-e{font-size:5rem;animation:splBounce 1s ease-in-out infinite;}
+@keyframes splBounce{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-20px) rotate(5deg);}}
+
+/* EVENT BANNER */
+#banner{width:100%;max-width:620px;background:rgba(20,28,50,.9);backdrop-filter:blur(15px);color:#fff;text-align:center;font-size:.7rem;font-weight:900;padding:8px 12px;z-index:200;border-bottom:1px solid var(--gb);font-family:'Bebas Neue';letter-spacing:1px;}
+#banner.ev{background:linear-gradient(90deg,#ff4757,#ff6b81,#ff4757)!important;animation:evPulse 1.5s infinite;}
+@keyframes evPulse{0%,100%{opacity:.9;}50%{opacity:1;}}
+
+/* BIG EVENT POPUP */
+#bigEv{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:5000;pointer-events:none;}
+.bigEv-card{padding:3rem 4rem;border-radius:2rem;text-align:center;border:2px solid rgba(255,255,255,.3);animation:evPop 3.5s forwards;}
+@keyframes evPop{0%{transform:scale(.3) rotate(-10deg);opacity:0;}20%{transform:scale(1.1) rotate(2deg);opacity:1;}75%{transform:scale(1);opacity:1;}100%{transform:scale(1.2);opacity:0;}}
+
+/* HUD */
+.hud{width:100%;max-width:620px;display:flex;justify-content:space-between;align-items:center;padding:.7rem 1rem;z-index:90;position:relative;}
+.luck-pill{background:rgba(0,212,255,.1);border:1px solid var(--accent);padding:.3rem .8rem;border-radius:2rem;font-size:.7rem;font-weight:900;color:var(--accent);}
+.money-badge{background:rgba(0,0,0,.6);padding:.4rem 1.2rem;border-radius:3rem;border:2px solid var(--money);font-weight:900;color:var(--money);font-size:1rem;transition:border-color .3s,color .3s;font-family:'Bebas Neue';letter-spacing:1px;}
+.top-ctrl{display:flex;gap:.5rem;align-items:center;}
+#saveInd{font-size:.6rem;color:var(--money);font-weight:900;opacity:0;transition:opacity .4s;}
+.icon-btn{background:var(--glass);border:1px solid var(--gb);width:2.3rem;height:2.3rem;border-radius:.7rem;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:all .2s;backdrop-filter:blur(5px);}
+.icon-btn:hover{background:var(--gb);transform:translateY(-2px);}
+.icon-btn:active{transform:scale(.88);}
+
+/* MAIN */
+.main-cont{display:flex;align-items:center;justify-content:center;gap:1.2rem;width:100%;max-width:820px;flex:1;padding:.5rem 1rem;}
+
+/* SIDEBAR */
+.side-bar{display:flex;flex-direction:column;gap:.6rem;}
+.side-btn{width:2.8rem;height:2.8rem;border-radius:1rem;border:1px solid var(--gb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:all .25s;backdrop-filter:blur(5px);box-shadow:0 4px 12px rgba(0,0,0,.3);position:relative;}
+.side-btn:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,.5);}
+.side-btn:active{transform:scale(.9);}
+.side-lbl{position:absolute;left:calc(100% + 8px);background:rgba(10,14,26,.97);border:1px solid var(--gb);padding:4px 10px;border-radius:8px;font-size:.65rem;font-weight:800;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;}
+.side-btn:hover .side-lbl{opacity:1;}
+
+/* PHONE */
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:.8rem;}
+#phone{width:min(72vw,300px);height:520px;background:linear-gradient(160deg,#141c32,#0a0e1a);border-radius:2.8rem;border:3px solid #1e2d50;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1.4rem 1.2rem 1.2rem;position:relative;transition:border-color .4s,box-shadow .4s;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),inset 0 0 30px rgba(0,0,0,.5);overflow:hidden;}
+#phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80px;height:6px;background:#1e2d50;border-radius:0 0 6px 6px;}
+#phone.bag-full-anim{animation:bagShake .4s;}
+@keyframes bagShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px) rotate(-2deg);}75%{transform:translateX(8px) rotate(2deg);}}
+#phone.ev-border{animation:evBorderAnim 1.5s infinite alternate;}
+@keyframes evBorderAnim{from{box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 20px var(--ec,#fff);}to{box-shadow:0 30px 60px -15px rgba(0,0,0,.4),0 0 50px var(--ec,#fff);}}
+#phoneGlow{position:absolute;inset:-20px;border-radius:3rem;opacity:0;transition:all .5s;pointer-events:none;}
+
+/* RARITY */
+.rarity-wrap{text-align:center;width:100%;}
+#rarityTag{padding:5px 16px;border-radius:20px;font-size:.65rem;font-weight:900;display:inline-block;text-transform:uppercase;letter-spacing:2px;font-family:'Bebas Neue';transition:all .3s;}
+#emojiName{font-size:.95rem;font-weight:800;opacity:.9;margin-top:5px;transition:all .3s;}
+
+/* EMOJI WRAPPER — glow ring properly centered */
+#emojiWrap{position:relative;display:flex;align-items:center;justify-content:center;width:130px;height:130px;cursor:pointer;flex-shrink:0;}
+#emojiWrap:hover #emojiDisp{transform:scale(1.15) rotate(8deg);}
+#emojiWrap:active #emojiDisp{transform:scale(.88) rotate(-8deg);}
+#emojiDisp{position:relative;z-index:1;font-size:5.5rem;line-height:1;transition:transform .35s cubic-bezier(.175,.885,.32,1.275),filter .35s;filter:drop-shadow(0 0 20px rgba(255,255,255,.1));}
+
+/* GLOW RING */
+#glowRing{position:absolute;inset:-10px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .4s;z-index:0;}
+#glowRing.vis{opacity:1;}
+.gr-gold   {box-shadow:0 0 0 3px gold,0 0 25px 10px rgba(255,215,0,.6),0 0 50px 20px rgba(255,215,0,.3);animation:grG 1.5s infinite alternate;}
+.gr-diamond{box-shadow:0 0 0 3px #b9f2ff,0 0 25px 10px rgba(185,242,255,.7),0 0 50px 20px rgba(185,242,255,.3);animation:grD 1.5s infinite alternate;}
+.gr-rainbow{animation:grR 1.5s linear infinite;}
+.gr-master {box-shadow:0 0 0 3px #ff00ff,0 0 30px 12px rgba(255,0,255,.7),0 0 60px 25px rgba(255,0,255,.4);animation:grM 1s infinite alternate;}
+@keyframes grG{from{box-shadow:0 0 0 2px gold,0 0 15px 6px rgba(255,215,0,.4);}to{box-shadow:0 0 0 4px gold,0 0 35px 16px rgba(255,215,0,.7);}}
+@keyframes grD{from{box-shadow:0 0 0 2px #b9f2ff,0 0 15px 6px rgba(185,242,255,.4);}to{box-shadow:0 0 0 4px #b9f2ff,0 0 40px 18px rgba(185,242,255,.7);}}
+@keyframes grR{0%{box-shadow:0 0 0 3px red,0 0 30px 10px rgba(255,0,0,.5);}17%{box-shadow:0 0 0 3px orange,0 0 30px 10px rgba(255,165,0,.5);}33%{box-shadow:0 0 0 3px yellow,0 0 30px 10px rgba(255,255,0,.5);}50%{box-shadow:0 0 0 3px lime,0 0 30px 10px rgba(0,255,0,.5);}67%{box-shadow:0 0 0 3px cyan,0 0 30px 10px rgba(0,255,255,.5);}83%{box-shadow:0 0 0 3px #a855f7,0 0 30px 10px rgba(168,85,247,.5);}100%{box-shadow:0 0 0 3px red,0 0 30px 10px rgba(255,0,0,.5);}}
+@keyframes grM{from{box-shadow:0 0 0 3px #ff00ff,0 0 20px 8px rgba(255,0,255,.5);transform:scale(.95);}to{box-shadow:0 0 0 5px #ff00ff,0 0 50px 20px rgba(255,0,255,.8);transform:scale(1.05);}}
+
+/* MUTATIONS */
+.mut-gold{filter:drop-shadow(0 0 15px gold) brightness(1.2);}
+.mut-diamond{filter:drop-shadow(0 0 15px #b9f2ff) brightness(1.3);}
+.mut-rainbow{animation:mutRainbow 3s linear infinite;}
+.mut-master{animation:mutMaster 1.5s alternate infinite;}
+@keyframes mutRainbow{0%{filter:hue-rotate(0deg) drop-shadow(0 0 15px #fff);}100%{filter:hue-rotate(360deg) drop-shadow(0 0 15px #fff);}}
+@keyframes mutMaster{from{transform:scale(1);filter:drop-shadow(0 0 15px #ff00ff);}to{transform:scale(1.08);filter:drop-shadow(0 0 35px #ff00ff) brightness(1.3);}}
+
+/* SCROLL REVEAL */
+@keyframes scrollReveal{0%{transform:scale(.5) rotate(-15deg);opacity:0;}70%{transform:scale(1.1) rotate(5deg);}100%{transform:scale(1) rotate(0);opacity:1;}}
+.scroll-reveal{animation:scrollReveal .5s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes noMoneyShake{0%,100%{transform:none;}15%{transform:translateX(-10px) rotate(-5deg);}30%{transform:translateX(10px) rotate(5deg);}45%{transform:translateX(-8px) rotate(-3deg);}60%{transform:translateX(8px) rotate(3deg);}75%{transform:translateX(-4px);}}
+.shake{animation:noMoneyShake .5s ease;}
+
+/* PHONE BOTTOM */
+.phone-bot{width:100%;text-align:center;}
+#mutTag{font-size:.75rem;min-height:20px;font-weight:900;text-transform:uppercase;letter-spacing:2px;font-family:'Bebas Neue';}
+#emojiGain{color:var(--money);font-weight:900;font-size:1.3rem;margin-bottom:2px;}
+#emojiPrice{opacity:.65;font-size:.75rem;margin-bottom:6px;transition:color .3s;}
+.scroll-btn{width:100%;padding:.85rem;border:none;border-radius:1rem;font-weight:900;cursor:pointer;color:#0a0e1a;text-transform:uppercase;font-size:.85rem;letter-spacing:2px;font-family:'Bebas Neue';background:linear-gradient(135deg,#00d4ff,#0090cc);box-shadow:0 4px 0 rgba(0,0,0,.4),0 0 20px rgba(0,212,255,.3);transition:transform .1s,box-shadow .1s;position:relative;overflow:hidden;}
+.scroll-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.15),transparent);}
+.scroll-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.4);}
+.buy-btn{width:100%;padding:.65rem;border:none;border-radius:.8rem;font-weight:900;cursor:pointer;text-transform:uppercase;font-size:.75rem;letter-spacing:1px;font-family:'Bebas Neue';transition:all .15s;margin-top:.35rem;position:relative;overflow:hidden;}
+.buy-btn.can{color:#000;background:linear-gradient(135deg,var(--money),#22c55e);box-shadow:0 3px 0 rgba(0,0,0,.4),0 0 15px rgba(57,255,126,.3);}
+.buy-btn.can::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.2),transparent);}
+.buy-btn.can:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.4);}
+.buy-btn.cant{color:rgba(255,255,255,.5);background:linear-gradient(135deg,#475569,#334155);cursor:not-allowed;}
+
+/* BOT NAV */
+.bot-nav{width:100%;max-width:620px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;padding:1rem 1rem 1.5rem;}
+.nav-btn{padding:.8rem;border:1px solid var(--gb);border-radius:1rem;font-weight:900;cursor:pointer;color:#fff;text-transform:uppercase;font-size:.7rem;letter-spacing:1px;font-family:'Bebas Neue';background:rgba(20,28,50,.8);backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(0,0,0,.3);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.nav-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.4);}
+.nav-btn:active{transform:translateY(1px);}
+.nav-icon{font-size:1.2rem;}
+#rbBtn{background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(168,85,247,.1));border-color:rgba(168,85,247,.4);}
+
+/* PANELS */
+.panel{position:fixed;inset:0;background:#080c19;backdrop-filter:blur(30px);display:none;flex-direction:column;z-index:1000;border:1px solid var(--gb);}
+.panel.open{display:flex;animation:panelIn .35s cubic-bezier(.165,.84,.44,1);}
+@keyframes panelIn{from{transform:translateY(10px) scale(.98);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+.panel-hdr{display:flex;justify-content:space-between;align-items:center;padding:1.4rem 1.4rem .9rem;border-bottom:1px solid var(--gb);background:rgba(255,255,255,.02);}
+.panel-hdr h2{font-family:'Bebas Neue';font-size:1.8rem;letter-spacing:3px;}
+.panel-close{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);width:2.2rem;height:2.2rem;border-radius:.7rem;color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:all .2s;}
+.panel-close:hover{background:rgba(239,68,68,.3);transform:rotate(90deg);}
+.panel-body{flex:1;overflow-y:auto;padding:1.2rem 1.4rem;scrollbar-width:thin;scrollbar-color:var(--gb) transparent;color:#fff;}
+
+/* CARDS */
+.card{background:var(--card);padding:1rem 1.2rem;border-radius:1.2rem;display:flex;align-items:center;margin-bottom:.8rem;border:1px solid var(--gb);transition:all .2s;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+.card:hover{border-color:rgba(0,212,255,.15);}
+.total-ctr{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);padding:1.2rem;border-radius:1.2rem;text-align:center;margin-bottom:1.2rem;}
+
+/* TABS */
+.tabs{display:flex;overflow-x:auto;gap:.6rem;margin-bottom:1.2rem;padding-bottom:.3rem;}
+.tab-btn{padding:.5rem 1rem;border-radius:.8rem;background:var(--card);border:1px solid var(--gb);color:#fff;font-weight:900;white-space:nowrap;cursor:pointer;transition:all .2s;font-size:.75rem;font-family:'Bebas Neue';letter-spacing:1px;}
+.tab-btn.active{background:var(--accent);color:#000;border-color:var(--accent);box-shadow:0 0 15px rgba(0,212,255,.4);}
+
+/* BUTTONS */
+.btn{padding:.7rem 1.2rem;border:none;border-radius:.8rem;cursor:pointer;font-weight:900;color:#fff;font-family:'Bebas Neue';letter-spacing:1px;font-size:.85rem;transition:all .2s;box-shadow:0 3px 8px rgba(0,0,0,.3);}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.btn:active{transform:translateY(1px);filter:brightness(.9);}
+.btn.primary{background:linear-gradient(135deg,var(--money),#22c55e);color:#000;}
+.btn.danger{background:linear-gradient(135deg,#ef4444,#dc2626);}
+.btn.info{background:linear-gradient(135deg,var(--accent),#0090cc);color:#000;}
+.btn.ghost{background:var(--glass);border:1px solid var(--gb);}
+.btn.purple{background:linear-gradient(135deg,#a855f7,#7c3aed);}
+.btn.gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;}
+.btn.sm{padding:.4rem .9rem;font-size:.75rem;}
+.btn.full{width:100%;padding:1rem;font-size:1rem;}
+
+/* FUSION */
+.fusion-slot{width:88px;height:88px;border-radius:1.4rem;border:2px dashed var(--gb);background:var(--glass);display:flex;align-items:center;justify-content:center;font-size:2.5rem;cursor:pointer;transition:all .3s;}
+.fusion-slot:hover{border-color:var(--accent);background:rgba(0,212,255,.05);transform:scale(1.05);}
+.fusion-slot.filled{border-style:solid;border-color:var(--accent);background:rgba(0,212,255,.08);}
+.fus-spin{animation:fusSpin 2s linear infinite;}
+@keyframes fusSpin{0%{transform:rotate(0deg) scale(1);filter:hue-rotate(0deg);}100%{transform:rotate(360deg) scale(1.12);filter:hue-rotate(360deg);}}
+
+/* PROGRESS */
+.pbar{background:var(--glass);border-radius:10px;height:7px;overflow:hidden;margin-top:5px;}
+.pfill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--money));transition:width .5s;}
+
+/* TOAST */
+#toasts{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.toast{background:rgba(8,12,25,.97);border:1px solid var(--accent);color:#fff;padding:12px 20px;border-radius:12px;backdrop-filter:blur(15px);animation:tIn .3s cubic-bezier(.175,.885,.32,1.275) forwards,tOut .3s forwards 2.7s;font-weight:800;font-size:.85rem;}
+.toast.ok{border-color:var(--money);}
+.toast.err{border-color:#ef4444;}
+@keyframes tIn{from{transform:translateX(100%) scale(.8);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes tOut{to{transform:translateX(100%);opacity:0;}}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:linear-gradient(160deg,#141c32,#0a0e1a);border:1px solid var(--gb);padding:2.5rem;border-radius:2rem;width:100%;max-width:420px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.7);animation:mIn .4s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes mIn{from{transform:scale(.8) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+
+/* CONFIRM */
+#cfmOv{position:fixed;inset:0;display:none;align-items:flex-end;justify-content:center;z-index:8000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);}
+.cfm-card{background:linear-gradient(160deg,#1a243f,#0e1629);border:2px solid var(--gb);border-radius:2rem 2rem 0 0;padding:2rem;width:100%;max-width:500px;text-align:center;animation:slideUp .4s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:none;}}
+.cfm-emoji{font-size:5rem;margin:1rem 0;}
+
+/* DISCOVERY */
+#discOv{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:7000;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);pointer-events:none;}
+.disc-card{background:linear-gradient(135deg,#1a2440,#0e1629);border:2px solid gold;border-radius:2rem;padding:2.5rem 3rem;text-align:center;box-shadow:0 0 80px rgba(250,204,21,.4);animation:discAnim 3s forwards;}
+@keyframes discAnim{0%{transform:scale(.5) rotate(-10deg);opacity:0;}20%{transform:scale(1.05);opacity:1;}80%{transform:scale(1);opacity:1;}100%{transform:scale(.9);opacity:0;}}
+
+/* FLOATING EVENT EMOJI — discret, intégré au banner */
+#evFloat{display:none;}
+.skin-card{background:var(--card);padding:1.2rem;border-radius:1.5rem;border:2px solid var(--gb);margin-bottom:1rem;transition:all .3s;position:relative;overflow:hidden;}
+.skin-preview{height:70px;border-radius:1rem;margin-bottom:.8rem;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.skin-mini-phone{width:36px;height:52px;border-radius:8px;border:3px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);}
+@keyframes rainbowBorder{0%,100%{border-color:red;}17%{border-color:orange;}33%{border-color:yellow;}50%{border-color:lime;}67%{border-color:cyan;}83%{border-color:#a855f7;}}
+
+/* Rainbow skin active styles */
+#phone.skin-rainbow{animation:phoneRainbowBorder 2s linear infinite!important;}
+@keyframes phoneRainbowBorder{
+  0%{border-color:#ff0000;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(255,0,0,.6);}
+  14%{border-color:#ff8800;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(255,136,0,.6);}
+  28%{border-color:#ffff00;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(255,255,0,.6);}
+  42%{border-color:#00ff00;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(0,255,0,.6);}
+  57%{border-color:#00d4ff;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(0,212,255,.6);}
+  71%{border-color:#4400ff;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(68,0,255,.6);}
+  85%{border-color:#aa00ff;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(170,0,255,.6);}
+  100%{border-color:#ff0000;box-shadow:0 30px 60px -15px rgba(0,0,0,.7),0 0 30px rgba(255,0,0,.6);}
+}
+.skin-rainbow-bg{position:absolute;inset:0;border-radius:2.5rem;animation:rainbowBg 3s linear infinite;pointer-events:none;z-index:0;opacity:.15;}
+@keyframes rainbowBg{
+  0%{background:radial-gradient(circle,#ff0000,transparent 70%);}
+  16%{background:radial-gradient(circle,#ff8800,transparent 70%);}
+  33%{background:radial-gradient(circle,#ffff00,transparent 70%);}
+  50%{background:radial-gradient(circle,#00ff00,transparent 70%);}
+  66%{background:radial-gradient(circle,#00d4ff,transparent 70%);}
+  83%{background:radial-gradient(circle,#aa00ff,transparent 70%);}
+  100%{background:radial-gradient(circle,#ff0000,transparent 70%);}
+}
+
+/* PHONE CARD */
+.ph-card{background:var(--card);padding:1rem 1.2rem;border-radius:1.2rem;border:1px solid var(--gb);margin-bottom:.8rem;display:flex;align-items:center;gap:1rem;transition:all .2s;}
+.ph-card.eq{border-color:var(--accent);background:rgba(0,212,255,.05);}
+.ph-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* INDEX */
+.idx-e{width:48px;height:48px;background:var(--card);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;border:1px solid transparent;transition:all .2s;position:relative;}
+.idx-e.disc{border-color:rgba(255,255,255,.15);}
+.idx-e.disc:hover{transform:scale(1.15);}
+.idx-e.und{opacity:.15;filter:grayscale(1);}
+.idx-cnt{position:absolute;bottom:-2px;right:-2px;background:var(--accent);color:#000;width:15px;height:15px;border-radius:50%;font-size:.5rem;font-weight:900;display:flex;align-items:center;justify-content:center;}
+
+/* CREDITS */
+@keyframes creditsIn{from{transform:scale(.7) translateY(30px);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes creditsFadeUp{from{transform:translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+.credit-row{display:flex;align-items:center;gap:.9rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:1rem;padding:.8rem 1rem;animation:creditsFadeUp .4s both;}
+
+/* MUSIC VOLUME CONTROL */
+.vol-ctrl{display:flex;align-items:center;gap:.4rem;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:1.5rem;padding:.25rem .6rem .25rem .4rem;}
+.vol-icon{font-size:.9rem;cursor:pointer;user-select:none;}
+.vol-slider{-webkit-appearance:none;appearance:none;width:55px;height:4px;border-radius:2px;background:rgba(0,212,255,.3);outline:none;cursor:pointer;}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;}
+
+</style>
+</head>
+<body>
+<div id="ptcls"></div>
+<div id="evBg"></div>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="spl-e">🎰</div>
+  <div class="spl-logo">EMOJI SCROLL</div>
+  <p style="opacity:.45;font-size:.75rem;letter-spacing:1px;margin-bottom:1rem">ULTRA EDITION</p>
+  <button class="btn info" style="width:200px;font-size:1.1rem;padding:1.1rem" onclick="startGame()">▶ PLAY</button>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts"></div>
+
+<!-- MODAL -->
+<div id="modalOv" class="modal-ov">
+  <div class="modal-box">
+    <div id="mEmo" style="font-size:3rem;margin-bottom:.5rem"></div>
+    <h2 id="mTitle" style="font-family:'Bebas Neue';letter-spacing:3px;font-size:1.8rem;margin-bottom:1rem"></h2>
+    <p id="mText" style="opacity:.75;margin-bottom:1.5rem;line-height:1.7;font-size:.9rem"></p>
+    <div id="mActs" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"></div>
+  </div>
+</div>
+
+<!-- BIG EVENT -->
+<div id="bigEv">
+  <div class="bigEv-card">
+    <div style="font-size:3rem;margin-bottom:.5rem">🔥</div>
+    <div style="font-family:'Bebas Neue';font-size:1rem;opacity:.8;letter-spacing:2px">ÉVÉNEMENT</div>
+    <h2 id="bigEvName" style="font-family:'Bebas Neue';font-size:2.5rem;letter-spacing:2px;margin-top:4px">EVENT</h2>
+  </div>
+</div>
+
+<!-- DISCOVERY -->
+<div id="discOv">
+  <div class="disc-card">
+    <div style="font-size:.75rem;opacity:.7;letter-spacing:2px;font-family:'Bebas Neue'">NOUVELLE DÉCOUVERTE !</div>
+    <div id="discE" style="font-size:5rem;margin:.8rem 0"></div>
+    <div id="discN" style="font-size:1.8rem;font-family:'Bebas Neue';letter-spacing:2px;color:gold"></div>
+    <div id="discR" style="font-size:.9rem;opacity:.8;margin-top:4px"></div>
+  </div>
+</div>
+
+<!-- CONFIRM BUY -->
+<div id="cfmOv">
+  <div class="cfm-card">
+    <div id="cfmE" class="cfm-emoji">✨</div>
+    <div id="cfmN" style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:2px"></div>
+    <div id="cfmR" style="opacity:.7;font-size:.85rem;margin-bottom:.4rem"></div>
+    <div id="cfmM" style="font-size:.85rem;font-weight:900;margin-bottom:1.2rem;letter-spacing:1px"></div>
+    <div style="display:flex;gap:1rem;justify-content:center">
+      <button class="btn primary" style="flex:1;max-width:160px;padding:.9rem" onclick="doCfmBuy()">✅ ACHETER</button>
+      <button class="btn ghost"   style="flex:1;max-width:160px;padding:.9rem" onclick="cancelCfm()">❌ PASSER</button>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER -->
+<div id="banner" style="display:none">Chargement...</div>
+
+<!-- HUD -->
+<div class="hud" style="display:none">
+  <div class="luck-pill">🍀 ×<span id="luckDisp">1</span> · <span id="phoneNameHud" style="opacity:.7;font-size:.6rem">Nokia 3310</span></div>
+  <div id="moneyDisp" class="money-badge">0 $</div>
+  <div class="top-ctrl">
+    <div id="saveInd">💾</div>
+    <div class="vol-ctrl" title="Volume Musique">
+      <span class="vol-icon" id="musicToggleBtn" onclick="toggleMusic()">🎵</span>
+      <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="40" oninput="setMusicVol(this.value)">
+    </div>
+    <button class="icon-btn" onclick="openPanel('settingsPanel');playSFX('ui')">⚙️</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-cont" style="display:none">
+  <div class="side-bar">
+    <div class="side-btn" style="background:rgba(0,212,255,.15);border-color:rgba(0,212,255,.3)"    onclick="openPanel('indexPanel');playSFX('ui')">📖<span class="side-lbl">INDEX</span></div>
+    <div class="side-btn" style="background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.3)"  onclick="openPanel('shopPanel');playSFX('ui')">🛒<span class="side-lbl">SHOP</span></div>
+    <div class="side-btn" style="background:rgba(100,116,139,.3)"                                   onclick="openPanel('skinPanel');playSFX('ui')">🎨<span class="side-lbl">COQUES</span></div>
+    <div class="side-btn" style="background:rgba(236,72,153,.15);border-color:rgba(236,72,153,.3)"  onclick="openPanel('fusionPanel');playSFX('ui')">🌀<span class="side-lbl">FUSION</span></div>
+    <div class="side-btn" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3)"  onclick="openPanel('rankPanel');playSFX('ui')">🏆<span class="side-lbl">CLASSEMENT</span></div>
+    <div class="side-btn" style="background:rgba(249,115,22,.15);border-color:rgba(249,115,22,.3)"  onclick="openPanel('questPanel');playSFX('ui')">📜<span class="side-lbl">MISSIONS</span></div>
+    <div class="side-btn" style="background:rgba(250,204,21,.15);border-color:rgba(250,204,21,.3)"  onclick="showCredits();playSFX('ui')">⭐<span class="side-lbl">CRÉDITS</span></div>
+  </div>
+
+  <div class="phone-wrap" style="position:relative;">
+    <div id="phone">
+      <div id="phoneGlow"></div>
+      <div class="rarity-wrap">
+        <div id="rarityTag" style="background:#1e2d50;color:#fff">PRÊT ?</div>
+        <div id="emojiName">Scroll pour commencer</div>
+      </div>
+      <div id="emojiWrap">
+        <div id="glowRing"></div>
+        <div id="emojiDisp">🎰</div>
+      </div>
+      <div class="phone-bot">
+        <div id="mutTag" style="color:#fff"></div>
+        <div id="emojiGain">+0/s</div>
+        <div id="emojiPrice" style="margin-bottom:6px">0 $</div>
+        <button class="scroll-btn" onclick="doScroll()">SCROLL</button>
+        <button id="buyBtn" class="buy-btn cant" onclick="buyCurrentEmoji()">ACHETER — 0 $</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bot-nav" style="display:none">
+  <button class="nav-btn" onclick="openPanel('inventoryPanel');playSFX('ui')">
+    <span class="nav-icon">🎒</span><span class="nav-lbl">SAC</span><small id="slotsDisp" style="opacity:.6">0/4</small>
+  </button>
+  <button class="nav-btn" onclick="openPanel('phonesPanel');playSFX('ui')">
+    <span class="nav-icon">📱</span><span class="nav-lbl">PHONES</span>
+  </button>
+  <button id="rbBtn" class="nav-btn" onclick="openPanel('rebirthPanel');playSFX('ui')">
+    <span class="nav-icon">🌟</span><span class="nav-lbl">REBIRTH</span>
+  </button>
+</div>
+
+<!-- ===================== PANELS ===================== -->
+<div id="inventoryPanel" class="panel">
+  <div class="panel-hdr"><h2>MON SAC</h2><button class="panel-close" onclick="closePanel('inventoryPanel')">✕</button></div>
+  <div class="panel-body">
+    <div class="total-ctr">
+      <div style="font-size:.7rem;opacity:.7;letter-spacing:2px;font-family:'Bebas Neue'">REVENU PASSIF</div>
+      <div style="font-size:2.2rem;font-weight:900;color:var(--money);font-family:'Bebas Neue'">+<span id="totalIncome">0</span> $/s</div>
+    </div>
+    <div id="invList"></div>
+  </div>
+</div>
+
+<div id="settingsPanel" class="panel">
+  <div class="panel-hdr"><h2>RÉGLAGES</h2><button class="panel-close" onclick="closePanel('settingsPanel')">✕</button></div>
+  <div class="panel-body">
+    <div class="setting-row"><span style="font-weight:800">Effets Sonores</span><button id="sfxBtn" class="btn primary" style="width:90px" onclick="toggleSFX()">ON</button></div>
+    <div class="setting-row">
+      <span style="font-weight:800">Langue</span>
+      <div style="display:flex;gap:10px">
+        <button class="icon-btn" onclick="setLang('fr')">🇫🇷</button>
+        <button class="icon-btn" onclick="setLang('en')">🇺🇸</button>
+        <button class="icon-btn" onclick="setLang('es')">🇪🇸</button>
+      </div>
+    </div>
+    <!-- Confirmation settings (point 2) -->
+    <div style="background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.2);border-radius:1rem;padding:1rem;margin:1rem 0">
+      <div style="font-weight:900;color:#facc15;margin-bottom:.8rem;font-family:'Bebas Neue';letter-spacing:1px">⚙️ CONFIRMATIONS RARES</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem" id="confirmToggles"></div>
+    </div>
+    <!-- Secret code input (point 10) -->
+    <div style="background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:1rem;padding:1rem;margin:1rem 0">
+      <div style="font-weight:900;color:#a855f7;margin-bottom:.8rem;font-family:'Bebas Neue';letter-spacing:1px">🔑 CODE SECRET</div>
+      <div style="display:flex;gap:.5rem">
+        <input id="codeInput" type="text" placeholder="CODE..." style="flex:1;background:rgba(255,255,255,.05);border:1px solid var(--gb);border-radius:.6rem;padding:.6rem .9rem;color:#fff;font-family:'Bebas Neue';letter-spacing:2px;text-transform:uppercase;font-size:.9rem" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn purple sm" onclick="submitCode()">OK</button>
+      </div>
+    </div>
+    <!-- Admin panel button (point 11) -->
+    <div id="adminBtnRow" style="display:none;margin:1rem 0">
+      <button class="btn danger full" onclick="openPanel('adminPanel')">🛡️ PANEL ADMIN</button>
+    </div>
+    <div style="background:rgba(57,255,126,.06);border:1px solid rgba(57,255,126,.2);border-radius:1rem;padding:1rem;margin:1rem 0">
+      <div style="font-weight:900;color:var(--money);margin-bottom:.5rem">💾 SAUVEGARDE AUTO</div>
+      <div style="font-size:.8rem;opacity:.7;line-height:1.6">Sauvegarde automatique toutes les 5 secondes.<br>Inventaire · Index · Missions · Rebirth · Argent ✓</div>
+      <button class="btn info full" style="margin-top:.8rem;padding:.7rem" onclick="saveGame();showToast('💾 Sauvegardé !','ok')">SAUVEGARDER MAINTENANT</button>
+    </div>
+    <div id="statsBox" style="background:var(--card);border:1px solid var(--gb);border-radius:1rem;padding:1rem;margin-bottom:1rem;font-size:.8rem;line-height:2;opacity:.85"></div>
+    <button class="btn danger full" onclick="askReset()">RÉINITIALISER TOUT</button>
+  </div>
+</div>
+
+<div id="indexPanel" class="panel">
+  <div class="panel-hdr"><h2>COLLECTION</h2><button class="panel-close" onclick="closePanel('indexPanel')">✕</button></div>
+  <div class="panel-body">
+    <div id="colProg" style="text-align:center;margin-bottom:1rem;font-weight:900;color:var(--accent);font-family:'Bebas Neue';font-size:1.2rem"></div>
+    <div class="tabs" id="idxTabs"></div>
+    <div id="idxContent" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+  </div>
+</div>
+
+<div id="shopPanel" class="panel">
+  <div class="panel-hdr"><h2>BOUTIQUE</h2><button class="panel-close" onclick="closePanel('shopPanel')">✕</button></div>
+  <div class="panel-body">
+    <div style="text-align:center;margin-bottom:1rem;opacity:.6;font-size:.8rem">🔄 Actualisation dans : <span id="shopTimer">02:00</span></div>
+    <div id="shopContent"></div>
+  </div>
+</div>
+
+<div id="phonesPanel" class="panel">
+  <div class="panel-hdr"><h2>MES TÉLÉPHONES</h2><button class="panel-close" onclick="closePanel('phonesPanel')">✕</button></div>
+  <div class="panel-body"><div id="phonesList"></div></div>
+</div>
+
+<div id="skinPanel" class="panel">
+  <div class="panel-hdr"><h2>COQUES</h2><button class="panel-close" onclick="closePanel('skinPanel')">✕</button></div>
+  <div class="panel-body"><div id="skinList"></div></div>
+</div>
+
+<div id="fusionPanel" class="panel">
+  <div class="panel-hdr"><h2>LABO FUSION</h2><button class="panel-close" onclick="closePanel('fusionPanel')">✕</button></div>
+  <div class="panel-body" id="fusBody"></div>
+</div>
+
+<div id="rankPanel" class="panel">
+  <div class="panel-hdr"><h2>CLASSEMENT</h2><button class="panel-close" onclick="closePanel('rankPanel')">✕</button></div>
+  <div class="panel-body"><div id="rankList"></div></div>
+</div>
+
+<div id="questPanel" class="panel">
+  <div class="panel-hdr"><h2>MISSIONS</h2><button class="panel-close" onclick="closePanel('questPanel')">✕</button></div>
+  <div class="panel-body"><div id="questList"></div></div>
+</div>
+
+<div id="rebirthPanel" class="panel">
+  <div class="panel-hdr"><h2>ASCENSION</h2><button class="panel-close" onclick="closePanel('rebirthPanel')">✕</button></div>
+  <div class="panel-body"><div id="rbInfo"></div></div>
+  <div style="padding:1rem 1.4rem 1.5rem"><button class="btn primary full" onclick="doRebirth()">⭐ RENAÎTRE</button></div>
+</div>
+
+<!-- ADMIN PANEL (point 11) -->
+<div id="adminPanel" class="panel">
+  <div class="panel-hdr" style="background:linear-gradient(90deg,rgba(239,68,68,.15),transparent)">
+    <h2 style="color:#ef4444">🛡️ ADMIN</h2>
+    <button class="panel-close" onclick="closePanel('adminPanel')">✕</button>
+  </div>
+  <div class="panel-body">
+    <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:1rem;padding:1rem;margin-bottom:1rem;font-size:.8rem;opacity:.8">⚠️ Mode Administrateur — Outil de test uniquement</div>
+    <div id="adminContent"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let money=100, inventory=[], rebirthLv=0, phoneIdx=0, totalSlots=4;
+let curEmoji=null, pendingCfm=null;
+let sfxOn=true, lang='fr', tutDone=false;
+let ownedPhones=['Nokia 3310'], ownedSkins=['grey'], skinId='grey';
+let discovered={};
+let stats={total:0,scrolls:0,fusions:0,bagFills:0,mutGold:0,mutMaster:0,legFound:0,ogFound:0};
+let evActive=null, evDef=null, evPhase=false, evEnd=0, evNext=Date.now()+60000;
+let shopPhones=[], shopSkins=[], shopReset=Date.now()+120000;
+let fusSlots=[null,null], fusBusy=false, fusEnd=null, fusResult=null;
+let claimed=[];
+let idxTab='Normal';
+// Confirmation settings per rarity (point 2)
+let confirmSettings={mythique:true, exotique:true, og:true, master:true};
+// Admin mode (point 11)
+let adminUnlocked=false;
+// Emoji blocks inventory (point 5)
+let emojiBlocks=[];
+// Secret codes (point 10)
+const SECRET_CODES={
+  'YOLO': ()=>{money+=9999;showToast('🤫 Code secret: +9,999 $','ok');},
+  'EMOJI42': ()=>{showToast('🎮 Tu as trouvé le code du créateur !','ok');playSFX('disc');},
+  'RAINBOW': ()=>{evActive='rainbow';evPhase=true;evEnd=Date.now()+60000;evDef=EVENTS.find(e=>e.key==='rainbow');showToast('🌈 Event Arc-en-Ciel activé !','ok');},
+  'LUCKY7': ()=>{stats.scrolls+=77;showToast('🍀 +77 scrolls comptabilisés !','ok');},
+};
+let usedCodes=[];
+
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const EMOJIS={
+  'Common':    [{s:'😀',n:'Smile'},{s:'😃',n:'Happy'},{s:'😄',n:'Joy'},{s:'😆',n:'Laugh'},{s:'😅',n:'Sweat'},{s:'😂',n:'Tears'},{s:'🙂',n:'Slight'},{s:'😊',n:'Blush'},{s:'😇',n:'Innocent'},{s:'😁',n:'Grin'}],
+  'Rare':      [{s:'😉',n:'Wink'},{s:'😍',n:'Heart Eyes'},{s:'🥰',n:'Love'},{s:'😘',n:'Kiss'},{s:'😋',n:'Yummy'},{s:'😛',n:'Tongue'},{s:'🤑',n:'Money Mouth'},{s:'😎',n:'Cool'},{s:'🤓',n:'Nerd'},{s:'🥳',n:'Party'}],
+  'Super Rare':[{s:'🤩',n:'Star-Struck'},{s:'😏',n:'Smirk'},{s:'😒',n:'Unamused'},{s:'🙄',n:'Eye Roll'},{s:'🤯',n:'Mind Blown'},{s:'🤠',n:'Cowboy'},{s:'🥸',n:'Disguised'},{s:'😬',n:'Grimace'},{s:'😴',n:'Sleeping'},{s:'🥴',n:'Woozy'}],
+  'Epic':      [{s:'😷',n:'Masked'},{s:'🤒',n:'Fever'},{s:'🥵',n:'Hot'},{s:'🥶',n:'Frozen'},{s:'😵',n:'Dizzy'},{s:'🫠',n:'Melting'},{s:'🤫',n:'Shushing'},{s:'🫡',n:'Salute'},{s:'🤡',n:'Clown'},{s:'👹',n:'Ogre'}],
+  'Legendary': [{s:'😺',n:'Cat Grin'},{s:'😸',n:'Cat Happy'},{s:'😹',n:'Cat LOL'},{s:'😻',n:'Cat Love'},{s:'🙀',n:'Cat Shock'},{s:'🙈',n:'See No Evil'},{s:'🙉',n:'Hear No Evil'},{s:'🙊',n:'Speak No Evil'},{s:'🦁',n:'Lion'},{s:'🐯',n:'Tiger'},{s:'🦊',n:'Fox'},{s:'🐺',n:'Wolf'},{s:'🦅',n:'Eagle'},{s:'🦋',n:'Butterfly'},{s:'🐉',n:'Dragon'}],
+  'Mythique':  [{s:'🔥',n:'Feu'},{s:'💧',n:'Eau'},{s:'🌪️',n:'Tornade'},{s:'🌈',n:'Arc-en-ciel'},{s:'⚡',n:'Éclair'},{s:'☄️',n:'Comète'},{s:'🌟',n:'Étoile'},{s:'💫',n:'Étincelle'},{s:'✨',n:'Brillant'},{s:'🌙',n:'Lune'},{s:'☀️',n:'Soleil'},{s:'🌎',n:'Terre'},{s:'🌊',n:'Vague'},{s:'🪐',n:'Planète'},{s:'🛸',n:'OVNI'}],
+  'Exotique':  [{s:'🦄',n:'Licorne'},{s:'🦕',n:'Dino'},{s:'🦚',n:'Paon'},{s:'🦩',n:'Flamant'},{s:'🦥',n:'Paresseux'},{s:'🐬',n:'Dauphin'},{s:'🐙',n:'Pieuvre'},{s:'🪸',n:'Corail'},{s:'🦀',n:'Crabe'},{s:'🐲',n:'Dragon'}],
+  'OG':        [{s:'💎',n:'Diamant'},{s:'👑',n:'Couronne'},{s:'🛡️',n:'Bouclier'},{s:'⚔️',n:'Épée'},{s:'🪙',n:'Pièce'}]
+};
+const RD={
+  'Common':    {c:'#94a3b8',p:100,   th:50,   glow:'rgba(148,163,184,.3)'},
+  'Rare':      {c:'#3b82f6',p:500,   th:15,   glow:'rgba(59,130,246,.3)'},
+  'Super Rare':{c:'#a855f7',p:5000,  th:5,    glow:'rgba(168,85,247,.3)'},
+  'Epic':      {c:'#ec4899',p:1e4,   th:2,    glow:'rgba(236,72,153,.3)'},
+  'Legendary': {c:'#f59e0b',p:1e5,   th:.5,   glow:'rgba(245,158,11,.3)'},
+  'Mythique':  {c:'#f43f5e',p:1e6,   th:.2,   glow:'rgba(244,63,94,.3)'},
+  'Exotique':  {c:'#f97316',p:1e7,   th:.1,   glow:'rgba(249,115,22,.3)'},
+  'OG':        {c:'#facc15',p:1e8,   th:.05,  glow:'rgba(250,204,21,.4)'}
+};
+const MUTS=[
+  {name:'OR',      name_en:'GOLD',    name_es:'ORO',     multi:2,  chance:30,  cls:'mut-gold',    color:'gold',    gr:'gr-gold'},
+  {name:'DIAMANT', name_en:'DIAMOND', name_es:'DIAMANTE',multi:4,  chance:25,  cls:'mut-diamond', color:'#b9f2ff', gr:'gr-diamond'},
+  {name:'ARC-EN-CIEL',name_en:'RAINBOW',name_es:'ARCOÍRIS',multi:8,chance:15, cls:'mut-rainbow', color:'#ff6b81', gr:'gr-rainbow'},
+  {name:'MASTER',  name_en:'MASTER',  name_es:'MAESTRO', multi:10, chance:5,   cls:'mut-master',  color:'#ff00ff', gr:'gr-master'}
+];
+const NO_MUT={name:'Normal',name_en:'Normal',name_es:'Normal',multi:1,chance:0,cls:'',color:'',gr:''};
+const PHONES_BASE=[
+  {n:'Nokia 3310',     l:1,   c:'#334155',rb:0},
+  {n:'iPhone 4',       l:5,   c:'#94a3b8',rb:1},
+  {n:'Galaxy S24',     l:15,  c:'#3b82f6',rb:5},
+  {n:'Omega God',      l:40,  c:'#ffd700',rb:10},
+  {n:'Infinity Scroll',l:200, c:'#06b6d4',rb:45},
+  {n:"Creator's Slate",l:250, c:'#ffffff',rb:50}
+];
+const SHOP_PHONES=[
+  {n:'Retro Flip',    l:10,  c:'#475569',price:50000},
+  {n:'BlackBerry Pro',l:25,  c:'#111',   price:500000},
+  {n:'Pixel X',       l:60,  c:'#22c55e',price:10000000},
+  {n:'CyberPhone',    l:120, c:'#eab308',price:500000000},
+  {n:'Gamer Phone',   l:80,  c:'#ff00ff',price:50000000},
+  {n:'Crystal Device',l:150, c:'#fff',   price:2000000000}
+];
+const SKINS=[
+  {id:'grey',   name:{fr:'Classique',    en:'Classic',      es:'Clásico'},    color:'#334155',grad:'linear-gradient(135deg,#334155,#1e293b)',price:0},
+  {id:'red',    name:{fr:'Rouge Flambé', en:'Flame Red',    es:'Rojo Llama'}, color:'#ef4444',grad:'linear-gradient(135deg,#ef4444,#b91c1c)',price:10000},
+  {id:'blue',   name:{fr:'Bleu Océan',   en:'Ocean Blue',   es:'Azul Océano'},color:'#3b82f6',grad:'linear-gradient(135deg,#3b82f6,#1d4ed8)',price:50000},
+  {id:'purple', name:{fr:'Violet Royal', en:'Royal Purple',  es:'Púrpura'},   color:'#a855f7',grad:'linear-gradient(135deg,#a855f7,#7c3aed)',price:200000},
+  {id:'gold',   name:{fr:'Or Légendaire',en:'Legendary Gold',es:'Oro Leyenda'},color:'#eab308',grad:'linear-gradient(135deg,#facc15,#ca8a04)',price:10000000},
+  {id:'neon',   name:{fr:'Néon Cyber',   en:'Cyber Neon',   es:'Neón Cyber'}, color:'#06b6d4',grad:'linear-gradient(135deg,#06b6d4,#0891b2)',price:50000000},
+  {id:'black',  name:{fr:'Obsidienne',   en:'Obsidian',     es:'Obsidiana'},  color:'#1c1917',grad:'linear-gradient(135deg,#1c1917,#0c0a09)',price:100000000},
+  {id:'rainbow',name:{fr:'Arc-en-Ciel',  en:'Rainbow',      es:'Arcoíris'},   color:'#ff6b81',grad:'linear-gradient(135deg,#ff6b81,#ffda79,#6bffb8,#48dbfb)',price:1000000000,special:true}
+];
+const EVENTS=[
+  {key:'money2',   fr:'💰 Argent ×2',         en:'💰 Money ×2',          es:'💰 Dinero ×2',         bg:'money', color:'#39ff7e',dur:120000},
+  {key:'money4',   fr:'💰 Argent ×4',         en:'💰 Money ×4',          es:'💰 Dinero ×4',         bg:'money', color:'#39ff7e',dur:90000},
+  {key:'luck2',    fr:'🍀 Chance ×2',         en:'🍀 Luck ×2',           es:'🍀 Suerte ×2',         bg:'luck',  color:'#00d4ff',dur:120000},
+  {key:'luck4',    fr:'🍀 Chance ×4',         en:'🍀 Luck ×4',           es:'🍀 Suerte ×4',         bg:'luck',  color:'#00d4ff',dur:90000},
+  {key:'mutations',fr:'⚡ Délire Mutations',   en:'⚡ Mutation Frenzy',    es:'⚡ Frenesí Mutaciones', bg:'mut',   color:'#ff00ff',dur:120000},
+  {key:'rainbow',  fr:'🌈 Arc-en-Ciel',       en:'🌈 Rainbow Event',     es:'🌈 Arcoíris',           bg:'rainbow',color:'#facc15',dur:60000},
+  {key:'cheap',    fr:'🏷️ Soldes −50%',        en:'🏷️ Sale −50%',         es:'🏷️ Oferta −50%',       bg:'money', color:'#f59e0b',dur:90000},
+  {key:'slots',    fr:'🎒 Double Sac',         en:'🎒 Double Bag',        es:'🎒 Mochila Doble',      bg:'luck',  color:'#a855f7',dur:60000},
+  {key:'mega',     fr:'🚀 Méga Scroll',        en:'🚀 Mega Scroll',       es:'🚀 Mega Scroll',        bg:'mut',   color:'#f43f5e',dur:60000}
+];
+const evLbl=d=>lang==='en'?d.en:lang==='es'?d.es:d.fr;
+const mutLbl=m=>{if(!m||m.name==='Normal')return '';return lang==='en'?m.name_en:lang==='es'?m.name_es:m.name;};
+
+const QUESTS=[
+  {id:0, fr:'Scroll 50 fois',             en:'Scroll 50 times',           es:'Scroll 50 veces',              target:50,   type:'scrolls',  reward:1000,    e:'🖱️'},
+  {id:1, fr:'Scroll 250 fois',            en:'Scroll 250 times',          es:'Scroll 250 veces',             target:250,  type:'scrolls',  reward:8000,    e:'🔄'},
+  {id:2, fr:'Scroll 1 000 fois',          en:'Scroll 1,000 times',        es:'Scroll 1,000 veces',           target:1000, type:'scrolls',  reward:50000,   e:'⚡'},
+  {id:3, fr:'Scroll 5 000 fois',          en:'Scroll 5,000 times',        es:'Scroll 5,000 veces',           target:5000, type:'scrolls',  reward:500000,  e:'🚀'},
+  {id:4, fr:'Atteindre 1 000 $/s',        en:'Reach 1,000 $/s',           es:'Alcanzar 1,000 $/s',           target:1000, type:'income',   reward:5000,    e:'💵'},
+  {id:5, fr:'Atteindre 100 000 $/s',      en:'Reach 100,000 $/s',         es:'Alcanzar 100K $/s',            target:1e5,  type:'income',   reward:1000000, e:'💰'},
+  {id:6, fr:'Atteindre 1M $/s',           en:'Reach 1M $/s',              es:'Alcanzar 1M $/s',              target:1e6,  type:'income',   reward:1e8,     e:'🤑'},
+  {id:7, fr:'Atteindre 1B $/s',           en:'Reach 1B $/s',              es:'Alcanzar 1B $/s',              target:1e9,  type:'income',   reward:1e11,    e:'🏧'},
+  {id:8, fr:'Gagner 100K $ au total',     en:'Earn 100K $ total',         es:'Ganar $100K total',            target:1e5,  type:'total',    reward:10000,   e:'🏦'},
+  {id:9, fr:'Gagner 10M $ au total',      en:'Earn 10M $ total',          es:'Ganar 10M $ total',            target:1e7,  type:'total',    reward:2000000, e:'💎'},
+  {id:10,fr:'Gagner 1B $ au total',       en:'Earn 1B $ total',           es:'Ganar 1B $ total',             target:1e9,  type:'total',    reward:5e8,     e:'🏆'},
+  {id:11,fr:'Effectue 1 Fusion',          en:'Perform 1 Fusion',          es:'Realizar 1 Fusión',            target:1,    type:'fusion',   reward:25000,   e:'🌀'},
+  {id:12,fr:'Effectue 5 Fusions',         en:'Perform 5 Fusions',         es:'Realizar 5 Fusiones',          target:5,    type:'fusion',   reward:500000,  e:'⚗️'},
+  {id:13,fr:'Effectue 20 Fusions',        en:'Perform 20 Fusions',        es:'Realizar 20 Fusiones',         target:20,   type:'fusion',   reward:5000000, e:'🔥'},
+  {id:14,fr:'Atteindre Rebirth 1',        en:'Reach Rebirth 1',           es:'Alcanzar Renacimiento 1',      target:1,    type:'rebirth',  reward:50000,   e:'⭐'},
+  {id:15,fr:'Atteindre Rebirth 5',        en:'Reach Rebirth 5',           es:'Alcanzar Renacimiento 5',      target:5,    type:'rebirth',  reward:100000,  e:'🌟'},
+  {id:16,fr:'Atteindre Rebirth 10',       en:'Reach Rebirth 10',          es:'Alcanzar Renacimiento 10',     target:10,   type:'rebirth',  reward:5000000, e:'💫'},
+  {id:17,fr:'Atteindre Rebirth 25',       en:'Reach Rebirth 25',          es:'Alcanzar Renacimiento 25',     target:25,   type:'rebirth',  reward:1e9,     e:'🌠'},
+  {id:18,fr:'Collectionne 10 émojis',     en:'Collect 10 emojis',         es:'Colecciona 10 emojis',         target:10,   type:'collect',  reward:50000,   e:'📦'},
+  {id:19,fr:'Collectionne 30 émojis',     en:'Collect 30 emojis',         es:'Colecciona 30 emojis',         target:30,   type:'collect',  reward:500000,  e:'🗂️'},
+  {id:20,fr:'Collectionne 60 émojis',     en:'Collect 60 emojis',         es:'Colecciona 60 emojis',         target:60,   type:'collect',  reward:5000000, e:'🌈'},
+  {id:21,fr:'Obtiens 1 mutation OR',      en:'Get 1 GOLD mutation',       es:'Obtener 1 mutación ORO',       target:1,    type:'mutGold',  reward:100000,  e:'🟡'},
+  {id:22,fr:'Obtiens 5 mutations OR',     en:'Get 5 GOLD mutations',      es:'Obtener 5 mutaciones ORO',     target:5,    type:'mutGold',  reward:500000,  e:'🥇'},
+  {id:23,fr:'Obtiens 1 mutation MASTER',  en:'Get a MASTER mutation',     es:'Obtener mutación MAESTRO',     target:1,    type:'mutMaster',reward:1000000, e:'💜'},
+  {id:24,fr:'Trouve 1 Légendaire',        en:'Find 1 Legendary',          es:'Encontrar 1 Legendario',       target:1,    type:'legFound', reward:200000,  e:'🏅'},
+  {id:25,fr:'Trouve 5 Légendaires',       en:'Find 5 Legendaries',        es:'Encontrar 5 Legendarios',      target:5,    type:'legFound', reward:1000000, e:'🎖️'},
+  {id:26,fr:'Trouve 1 OG',               en:'Find 1 OG',                 es:'Encontrar 1 OG',               target:1,    type:'ogFound',  reward:5000000, e:'👑'}
+];
+const BOT_NAMES=['NinjaScroll','Alpha_OG','Vip3r','DragonLord','Ph0enix','KingEmoji','Gh0stMod','N30nGod','CyberMax','GlitchPro','ZeroXX','VenomBot','ShadowKing','PixelGod','Hyperion','StormBreaker','IceFox','BlazeMaster','DarkNova','CryptoBot','MoonWalker','StarCraft3r','NightOwl','RocketMan','UltraVibe','NeonDragon','ThunderBolt','SpeedDemon','ChaosLord','MegaHero','GhostRider','SilverWolf','IronFist','TechWizard','DataMiner','ByteKing','QuantumX','AlphaOmega','BrainFreeze','DeepSpace','LunarBot','CosmicRay','NebulaPro','VoidWalker','EventHorizon','DarkMatter','SolarFlare','SuperNova','BlackHole42','Quasar99','ScrollMaster','EmojiGod','RareHunter','LegendSeeker','MythicOne','ExoticFlex','OGPlayer','ScrollKing','PremiumBot','EliteScroll','GoldenEmoji','DiamondHands','RainbowRush','MasterFlex','LuckyCharm','FortuneMod','WealthBot','CoinMaster','MoneyPrinter','InfiniteGold','FusionLord','HybridKing','LabMaster','AlchemistX','MixMaster','ComboGod','SynthBot','ReactorX','ChainReactor','PowerSurge','LevelUp99','RebirthKing','AscentBot','PhoenixRise','RespawnGod','CycleBreaker','LoopMaster','ResetBot','NewGamePlus','MaxLevel','Tr0llFace','XxX_Dark','MLGpro420','H4ck3rMan','Sk1llZ','N00bSlayer','GGWP_Bot','EzClap','PogChamp','OmegaLUL'];
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function fmt(n){
+  if(isNaN(n)||!isFinite(n))return '0';
+  if(n<0)return '-'+fmt(-n);
+  if(n<1000)return Math.floor(n).toString();
+  const u=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
+  let t=Math.floor(Math.log10(n)/3);
+  if(t>=u.length)return n.toExponential(2);
+  return (n/Math.pow(10,t*3)).toFixed(2)+u[t];
+}
+function fmtT(ms){
+  const s=Math.max(0,Math.floor(ms/1000));
+  return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+function getIncome(){
+  let base=inventory.reduce((a,e)=>a+(e.gain||0),0);
+  // Event passive income boost
+  if(evPhase&&evActive){
+    if(evActive==='money2')base*=2;
+    else if(evActive==='money4')base*=4;
+    else base*=1.5; // All other events: +50% passive income bonus
+  }
+  return base;
+}
+function allPhones(){return [...PHONES_BASE,...SHOP_PHONES].filter((v,i,a)=>a.findIndex(t=>t.n===v.n)===i);}
+function curPhone(){return allPhones().find(p=>p.n===ownedPhones[phoneIdx])||PHONES_BASE[0];}
+function effSlots(){return totalSlots+(evPhase&&evActive==='slots'?2:0);}
+function qCurr(q){
+  switch(q.type){
+    case'scrolls': return stats.scrolls;
+    case'income':  return getIncome();
+    case'rebirth': return rebirthLv;
+    case'total':   return stats.total;
+    case'fusion':  return stats.fusions;
+    case'collect': return Object.keys(discovered).length;
+    case'mutGold': return stats.mutGold;
+    case'mutMaster':return stats.mutMaster;
+    case'legFound':return stats.legFound;
+    case'ogFound': return stats.ogFound;
+    default:return 0;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════
+let audioCtx=null;
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function tone(f,t,d,v){
+  if(!sfxOn||!audioCtx)return;
+  try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=t;o.frequency.setValueAtTime(f,audioCtx.currentTime);g.gain.setValueAtTime(v,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.01,audioCtx.currentTime+d);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d);}catch(e){}
+}
+function playSFX(x){
+  initAudio();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+  if(x==='scroll')    tone(440,'sine',.12,.06);
+  else if(x==='buy')  {tone(700,'sine',.1,.1);setTimeout(()=>tone(1100,'sine',.15,.1),100);}
+  else if(x==='error')tone(180,'sawtooth',.2,.12);
+  else if(x==='ui')   tone(600,'square',.05,.05);
+  else if(x==='start'){tone(500,'sine',.2,.1);setTimeout(()=>tone(900,'sine',.3,.1),200);setTimeout(()=>tone(1300,'sine',.4,.1),400);}
+  else if(x==='leg')  {tone(440,'triangle',.5,.2);setTimeout(()=>tone(660,'triangle',.5,.2),200);setTimeout(()=>tone(880,'triangle',.6,.2),400);}
+  else if(x==='disc') {tone(880,'sine',.15,.15);setTimeout(()=>tone(1100,'sine',.15,.15),150);setTimeout(()=>tone(1320,'sine',.3,.15),300);}
+}
+
+// ═══════════════════════════════════════════════
+// MUSIC — generative ambient track via Web Audio
+// ═══════════════════════════════════════════════
+let musicCtx=null, musicOn=true, musicVol=0.4;
+let musicGain=null, musicNodes=[], musicScheduled=false;
+
+function initMusic(){
+  if(musicCtx)return;
+  try{
+    musicCtx=new(window.AudioContext||window.webkitAudioContext)();
+    musicGain=musicCtx.createGain();
+    musicGain.gain.setValueAtTime(musicVol,musicCtx.currentTime);
+    // Reverb via convolver
+    const conv=musicCtx.createConvolver();
+    const bufLen=musicCtx.sampleRate*2;
+    const buf=musicCtx.createBuffer(2,bufLen,musicCtx.sampleRate);
+    for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<bufLen;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/bufLen,3);}
+    conv.buffer=buf;
+    const convGain=musicCtx.createGain();convGain.gain.value=0.25;
+    musicGain.connect(conv);conv.connect(convGain);convGain.connect(musicCtx.destination);
+    musicGain.connect(musicCtx.destination);
+    startMusicLoop();
+  }catch(e){console.warn('Music init failed',e);}
+}
+
+// Pentatonic scale frequencies (C major pentatonic + octave)
+const PENTA=[261.63,293.66,329.63,392,440, 523.25,587.33,659.25,783.99,880];
+const BASS=[65.41,73.42,82.41,98,110];
+const CHORDS=[[0,2,4],[1,3,5],[2,4,6],[0,4,7]]; // indices into PENTA
+
+function musicNote(freq,startT,dur,vol,type='sine'){
+  if(!musicCtx||!musicGain)return;
+  const osc=musicCtx.createOscillator();
+  const g=musicCtx.createGain();
+  osc.type=type;
+  osc.frequency.setValueAtTime(freq,startT);
+  g.gain.setValueAtTime(0,startT);
+  g.gain.linearRampToValueAtTime(vol,startT+0.03);
+  g.gain.exponentialRampToValueAtTime(0.001,startT+dur);
+  osc.connect(g);g.connect(musicGain);
+  osc.start(startT);osc.stop(startT+dur+0.05);
+  return osc;
+}
+
+let musicPhase=0;
+function startMusicLoop(){
+  if(!musicCtx||!musicOn)return;
+  const now=musicCtx.currentTime;
+  const bpm=110, beat=60/bpm;
+  const loopBars=8, totalBeats=loopBars*4;
+
+  // Bass line
+  for(let b=0;b<totalBeats;b+=2){
+    const t=now+b*beat;
+    const bassFreq=BASS[Math.floor((musicPhase+b/2)%BASS.length)];
+    musicNote(bassFreq,t,beat*1.8,0.18,'triangle');
+  }
+
+  // Melody — arpeggiated chord
+  for(let b=0;b<totalBeats;b++){
+    const t=now+b*beat;
+    const chordIdx=Math.floor(b/4)%CHORDS.length;
+    const chord=CHORDS[chordIdx];
+    const noteIdx=chord[b%chord.length];
+    musicNote(PENTA[noteIdx],t,beat*0.6,0.06,'sine');
+  }
+
+  // Sparkle high notes every 2 beats
+  for(let b=0;b<totalBeats;b+=3){
+    const t=now+b*beat+beat*0.5;
+    const freq=PENTA[5+Math.floor(Math.random()*5)];
+    musicNote(freq,t,beat*0.3,0.04,'sine');
+  }
+
+  // Pad chords
+  for(let b=0;b<loopBars;b++){
+    const t=now+b*4*beat;
+    const chordIdx=b%CHORDS.length;
+    CHORDS[chordIdx].forEach((ni,i)=>{
+      musicNote(PENTA[ni]*0.5,t+i*0.02,beat*3.5,0.04,'triangle');
+    });
+  }
+
+  musicPhase=(musicPhase+1)%BASS.length;
+  const loopDur=totalBeats*beat*1000-100;
+  if(musicOn)setTimeout(startMusicLoop,loopDur);
+}
+
+function toggleMusic(){
+  musicOn=!musicOn;
+  const btn=document.getElementById('musicToggleBtn');
+  if(musicOn){
+    if(!musicCtx){initMusic();}
+    else{if(musicCtx.state==='suspended')musicCtx.resume();startMusicLoop();}
+    if(btn)btn.textContent='🎵';
+  } else {
+    if(btn)btn.textContent='🔇';
+    if(musicGain)musicGain.gain.setTargetAtTime(0,musicCtx.currentTime,0.2);
+    setTimeout(()=>{if(!musicOn&&musicGain)musicGain.gain.setValueAtTime(0,musicCtx.currentTime);},500);
+  }
+}
+
+function setMusicVol(v){
+  musicVol=v/100;
+  if(musicGain&&musicOn){
+    musicGain.gain.setTargetAtTime(musicVol,musicCtx.currentTime,0.1);
+  }
+  const btn=document.getElementById('musicToggleBtn');
+  if(btn)btn.textContent=musicVol===0?'🔇':musicVol<0.4?'🔉':'🎵';
+}
+
+
+function showToast(msg,cls=''){
+  const c=document.getElementById('toasts'),t=document.createElement('div');
+  t.className='toast '+cls;t.textContent=msg;c.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+function showModal(title,text,acts,emo=''){
+  document.getElementById('mTitle').textContent=title;
+  document.getElementById('mText').textContent=text;
+  document.getElementById('mEmo').textContent=emo;
+  const c=document.getElementById('mActs');c.innerHTML='';
+  acts.forEach(a=>{
+    const b=document.createElement('button');
+    b.className='btn '+(a.cls||'info');b.style.cssText='flex:1;padding:.85rem;';
+    b.textContent=a.text;
+    b.onclick=()=>{document.getElementById('modalOv').style.display='none';if(a.fn)a.fn();};
+    c.appendChild(b);
+  });
+  document.getElementById('modalOv').style.display='flex';
+}
+
+// ═══════════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════════
+function initParts(){
+  const c=document.getElementById('ptcls'),cols=['#00d4ff','#a855f7','#f97316','#39ff7e','#facc15'];
+  for(let i=0;i<20;i++){const p=document.createElement('div');p.className='pt';const sz=Math.random()*3+1;p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*10}s;`;c.appendChild(p);}
+}
+
+// ═══════════════════════════════════════════════
+// PANELS
+// ═══════════════════════════════════════════════
+function openPanel(id){
+  // Close all first
+  document.querySelectorAll('.panel.open').forEach(p=>{p.classList.remove('open');p.style.display='none';});
+  const p=document.getElementById(id);if(!p)return;
+  p.style.display='flex';
+  // Force reflow
+  p.offsetHeight;
+  p.classList.add('open');
+  const R={inventoryPanel:renderInventory,phonesPanel:renderPhones,shopPanel:renderShop,questPanel:renderQuests,indexPanel:renderIndex,fusionPanel:renderFusion,rankPanel:renderRank,rebirthPanel:renderRebirth,skinPanel:renderSkins,settingsPanel:renderStats,adminPanel:renderAdmin};
+  if(R[id])R[id]();
+}
+function closePanel(id){
+  const p=document.getElementById(id);if(!p)return;
+  p.classList.remove('open');
+  setTimeout(()=>{if(!p.classList.contains('open'))p.style.display='none';},350);
+}
+
+// ═══════════════════════════════════════════════
+// I18N — full translations
+// ═══════════════════════════════════════════════
+const T={
+  fr:{
+    scroll:'SCROLL',buy:'ACHETER',bag:'SAC',phones:'PHONES',rebirth:'REBIRTH',
+    settings:'RÉGLAGES',collection:'COLLECTION',shop:'BOUTIQUE',cases:'COQUES',
+    fusion:'LABO FUSION',rank:'CLASSEMENT',quests:'MISSIONS',
+    sfx:'Effets Sonores',language:'Langue',saveNow:'SAUVEGARDER MAINTENANT',
+    autoSave:'SAUVEGARDE AUTO',autoSaveDesc:'Sauvegarde automatique toutes les 5 secondes.',
+    resetAll:'RÉINITIALISER TOUT',passiveIncome:'REVENU PASSIF',
+    shopRefresh:'Actualisation dans :',phones_:'TÉLÉPHONES',skins:'COQUES',
+    allBought:'Tout acheté !',equipped:'Équipé ✓',equip:'ÉQUIPER',
+    noMoney:'Pas assez d\'argent !',bagFull:'Sac plein !',
+    fusionBtn:'FUSIONNER',fusionReset:'🔄 RESET',fusionRunning:'Fusion en cours...',
+    claimBtn:'⭐ RÉCUPÉRER',claim:'RÉCUP',done:'✅',
+    rankTitle:'CLASSEMENT',rankPlayers:'100 joueurs · Classement en temps réel',
+    myRank:'TON RANG :',readyTag:'PRÊT ?',scrollStart:'Scroll pour commencer',
+    discovered:'émojis découverts',newDisc:'NOUVELLE DÉCOUVERTE !',
+    welcome:'BIENVENUE ! 👋',welcomeMsg:'Bienvenue dans Emoji Scroll ! Appuie sur SCROLL pour découvrir des émojis.',
+    next:'SUIVANT',playBtn:'JOUER !',
+    buyMsg:'Achète les émojis pour gagner de l\'argent passif chaque seconde.',
+    fusMsg:'Utilise le Labo Fusion pour créer des Hybrides surpuissants !',
+    resetConfirm:'Voulez-vous effacer TOUTE votre progression ? Irréversible !',
+    yes:'OUI, TOUT EFFACER',no:'NON',
+    skinBought:'🎨 Coque équipée !',phoneBought:'📱 débloqué !',
+    rebirthTitle:'ASCENSION',rebirthLvl:'REBIRTH LEVEL',rebirthBonus:'BONUS REBIRTH :',
+    rebirthSlot:'+1 slot dans le sac',rebirthPhone:'Nouveau téléphone débloqué',
+    rebirthPrestige:'Prestige augmenté',cost:'Coût :',rebirthBtn:'⭐ RENAÎTRE',
+    confirmBuy:'✅ ACHETER',confirmSkip:'❌ PASSER',
+    event:'ÉVÉNEMENT',nextEvent:'Prochain événement dans :',
+    loaded:'Chargement...',equipped_:'Équipé',notOwned:'🛒 Shop',
+    confirmSettings:'CONFIRMATIONS RARES',confMythique:'Mythique',confExotique:'Ésothique',confOG:'OG',confMaster:'Emoji Master',
+    confOn:'ON',confOff:'OFF',
+    adminPanel:'🛡️ PANEL ADMIN',adminMoney:'Argent à donner',adminRebirths:'Renaissances',adminSkins:'Coques (id)',adminEmojis:'Emojis (slot rempli)',adminGive:'APPLIQUER',
+    casesTitle:'COQUES COLLECTION',caseNotOwned:'Non débloquée',caseQuest:'Quête liée',
+    emojiBlock:'EMOJI BLOCK',open:'OUVRIR',sell:'VENDRE',inventory_:'INVENTAIRE',
+    blockOpening:'Ouverture en cours...',blockResult:'Résultat !',
+    secretFound:'🔑 Code secret trouvé !',enterCode:'Entrer un code',codeInput:'CODE...',codeSubmit:'VALIDER',codeInvalid:'Code invalide',
+    statsTitle:'STATISTIQUES',
+  },
+  en:{
+    scroll:'SCROLL',buy:'BUY',bag:'BAG',phones:'PHONES',rebirth:'REBIRTH',
+    settings:'SETTINGS',collection:'COLLECTION',shop:'SHOP',cases:'CASES',
+    fusion:'FUSION LAB',rank:'LEADERBOARD',quests:'QUESTS',
+    sfx:'Sound Effects',language:'Language',saveNow:'SAVE NOW',
+    autoSave:'AUTO SAVE',autoSaveDesc:'Automatic save every 5 seconds.',
+    resetAll:'RESET EVERYTHING',passiveIncome:'PASSIVE INCOME',
+    shopRefresh:'Refresh in:',phones_:'PHONES',skins:'SKINS',
+    allBought:'All bought!',equipped:'Equipped ✓',equip:'EQUIP',
+    noMoney:'Not enough money!',bagFull:'Bag full!',
+    fusionBtn:'FUSE',fusionReset:'🔄 RESET',fusionRunning:'Fusion running...',
+    claimBtn:'⭐ CLAIM',claim:'CLAIM',done:'✅',
+    rankTitle:'LEADERBOARD',rankPlayers:'100 players · Real-time ranking',
+    myRank:'YOUR RANK:',readyTag:'READY?',scrollStart:'Scroll to start',
+    discovered:'emojis discovered',newDisc:'NEW DISCOVERY!',
+    welcome:'WELCOME! 👋',welcomeMsg:'Welcome to Emoji Scroll! Tap SCROLL to discover emojis.',
+    next:'NEXT',playBtn:'PLAY!',
+    buyMsg:'Buy emojis to earn passive income every second.',
+    fusMsg:'Use the Fusion Lab to create super powerful Hybrids!',
+    resetConfirm:'Do you want to erase ALL your progress? Irreversible!',
+    yes:'YES, ERASE EVERYTHING',no:'NO',
+    skinBought:'🎨 Case equipped!',phoneBought:'📱 unlocked!',
+    rebirthTitle:'ASCENSION',rebirthLvl:'REBIRTH LEVEL',rebirthBonus:'REBIRTH BONUS:',
+    rebirthSlot:'+1 bag slot',rebirthPhone:'New phone unlocked',
+    rebirthPrestige:'Prestige increased',cost:'Cost:',rebirthBtn:'⭐ REBIRTH',
+    confirmBuy:'✅ BUY',confirmSkip:'❌ SKIP',
+    event:'EVENT',nextEvent:'Next event in:',
+    loaded:'Loading...',equipped_:'Equipped',notOwned:'🛒 Shop',
+    confirmSettings:'RARE CONFIRMATIONS',confMythique:'Mythic',confExotique:'Exotic',confOG:'OG',confMaster:'Emoji Master',
+    confOn:'ON',confOff:'OFF',
+    adminPanel:'🛡️ ADMIN PANEL',adminMoney:'Money to give',adminRebirths:'Rebirths',adminSkins:'Cases (id)',adminEmojis:'Emojis (fill slot)',adminGive:'APPLY',
+    casesTitle:'CASES COLLECTION',caseNotOwned:'Not unlocked',caseQuest:'Linked quest',
+    emojiBlock:'EMOJI BLOCK',open:'OPEN',sell:'SELL',inventory_:'INVENTORY',
+    blockOpening:'Opening...',blockResult:'Result!',
+    secretFound:'🔑 Secret code found!',enterCode:'Enter a code',codeInput:'CODE...',codeSubmit:'VALIDATE',codeInvalid:'Invalid code',
+    statsTitle:'STATISTICS',
+  },
+  es:{
+    scroll:'SCROLL',buy:'COMPRAR',bag:'MOCHILA',phones:'TELÉFONOS',rebirth:'RENACIMIENTO',
+    settings:'AJUSTES',collection:'COLECCIÓN',shop:'TIENDA',cases:'CARCASAS',
+    fusion:'LAB FUSIÓN',rank:'CLASIFICACIÓN',quests:'MISIONES',
+    sfx:'Efectos de sonido',language:'Idioma',saveNow:'GUARDAR AHORA',
+    autoSave:'AUTOGUARDADO',autoSaveDesc:'Guardado automático cada 5 segundos.',
+    resetAll:'REINICIAR TODO',passiveIncome:'INGRESO PASIVO',
+    shopRefresh:'Actualización en:',phones_:'TELÉFONOS',skins:'CARCASAS',
+    allBought:'¡Todo comprado!',equipped:'Equipado ✓',equip:'EQUIPAR',
+    noMoney:'¡No tienes suficiente dinero!',bagFull:'¡Mochila llena!',
+    fusionBtn:'FUSIONAR',fusionReset:'🔄 RESET',fusionRunning:'Fusión en proceso...',
+    claimBtn:'⭐ RECLAMAR',claim:'RECLAMAR',done:'✅',
+    rankTitle:'CLASIFICACIÓN',rankPlayers:'100 jugadores · Ranking en tiempo real',
+    myRank:'TU RANGO:',readyTag:'¿LISTO?',scrollStart:'Scroll para empezar',
+    discovered:'emojis descubiertos',newDisc:'¡NUEVO DESCUBRIMIENTO!',
+    welcome:'¡BIENVENIDO! 👋',welcomeMsg:'¡Bienvenido a Emoji Scroll! Toca SCROLL para descubrir emojis.',
+    next:'SIGUIENTE',playBtn:'¡JUGAR!',
+    buyMsg:'Compra emojis para ganar dinero pasivo cada segundo.',
+    fusMsg:'¡Usa el Lab de Fusión para crear Híbridos súper poderosos!',
+    resetConfirm:'¿Quieres borrar TODO tu progreso? ¡Irreversible!',
+    yes:'SÍ, BORRAR TODO',no:'NO',
+    skinBought:'🎨 ¡Carcasa equipada!',phoneBought:'📱 ¡desbloqueado!',
+    rebirthTitle:'ASCENSIÓN',rebirthLvl:'NIVEL RENACIMIENTO',rebirthBonus:'BONO RENACIMIENTO:',
+    rebirthSlot:'+1 espacio en la mochila',rebirthPhone:'Nuevo teléfono desbloqueado',
+    rebirthPrestige:'Prestigio aumentado',cost:'Costo:',rebirthBtn:'⭐ RENACER',
+    confirmBuy:'✅ COMPRAR',confirmSkip:'❌ SALTAR',
+    event:'EVENTO',nextEvent:'Próximo evento en:',
+    loaded:'Cargando...',equipped_:'Equipado',notOwned:'🛒 Shop',
+    confirmSettings:'CONFIRMACIONES RARAS',confMythique:'Mítico',confExotique:'Exótico',confOG:'OG',confMaster:'Emoji Maestro',
+    confOn:'ON',confOff:'OFF',
+    adminPanel:'🛡️ PANEL ADMIN',adminMoney:'Dinero a dar',adminRebirths:'Renacimientos',adminSkins:'Carcasas (id)',adminEmojis:'Emojis (llenar slot)',adminGive:'APLICAR',
+    casesTitle:'COLECCIÓN CARCASAS',caseNotOwned:'No desbloqueada',caseQuest:'Misión vinculada',
+    emojiBlock:'EMOJI BLOCK',open:'ABRIR',sell:'VENDER',inventory_:'INVENTARIO',
+    blockOpening:'Abriendo...',blockResult:'¡Resultado!',
+    secretFound:'🔑 ¡Código secreto encontrado!',enterCode:'Introducir un código',codeInput:'CÓDIGO...',codeSubmit:'VALIDAR',codeInvalid:'Código inválido',
+    statsTitle:'ESTADÍSTICAS',
+  }
+};
+function t(k){return (T[lang]||T.fr)[k]||T.fr[k]||k;}
+function setLang(l){lang=l;updateAllTexts();showToast('🌐 '+(l==='fr'?'Français':l==='en'?'English':'Español'),'ok');saveGame();}
+function updateAllTexts(){
+  // Nav buttons
+  const navSpans=document.querySelectorAll('.nav-lbl');
+  const navKeys=['bag','phones','rebirth'];
+  navSpans.forEach((el,i)=>{if(navKeys[i])el.textContent=t(navKeys[i]);});
+  // Panel headers
+  const hdrMap={inventoryPanel:'passiveIncome',settingsPanel:'settings',indexPanel:'collection',shopPanel:'shop',phonesPanel:'phones',skinPanel:'cases',fusionPanel:'fusion',rankPanel:'rank',questPanel:'quests',rebirthPanel:'rebirthTitle'};
+  Object.entries(hdrMap).forEach(([pid,tk])=>{
+    const p=document.getElementById(pid);if(!p)return;
+    const h=p.querySelector('.panel-hdr h2');if(h)h.textContent=t(tk).toUpperCase();
+  });
+  // Scroll button
+  const sb=document.querySelector('.scroll-btn');if(sb)sb.textContent=t('scroll');
+  // Banner
+  if(!evPhase)document.getElementById('banner').textContent=t('loaded');
+  // Side labels
+  const sideLbls=document.querySelectorAll('.side-lbl');
+  const sideKeys=['collection','shop','cases','fusion','rank','quests'];
+  sideLbls.forEach((el,i)=>{if(sideKeys[i])el.textContent=t(sideKeys[i]).toUpperCase();});
+}
+
+// ═══════════════════════════════════════════════
+// SPLASH / TUTORIAL
+// ═══════════════════════════════════════════════
+function startGame(){
+  // Fix bug web hébergé: forcer l'affichage du jeu
+  const s=document.getElementById('splash');
+  if(s){s.style.opacity='0';s.style.pointerEvents='none';setTimeout(()=>{s.style.display='none';},600);}
+  document.getElementById('banner').style.display='';
+  document.querySelector('.hud').style.display='';
+  document.querySelector('.main-cont').style.display='';
+  document.querySelector('.bot-nav').style.display='';
+  playSFX('start');
+  // Start ambient music
+  setTimeout(()=>{if(musicOn)initMusic();},800);
+  if(!tutDone){
+    setTimeout(()=>{
+      showModal('BIENVENUE ! 👋','Bienvenue dans Emoji Scroll ! Appuie sur SCROLL pour découvrir des émojis.',[{text:'SUIVANT',fn:()=>{showModal('ACHÈTE !','Achète les émojis pour gagner de l\'argent passif chaque seconde.',[{text:'SUIVANT',fn:()=>{showModal('FUSION !','Utilise le Labo Fusion pour créer des Hybrides surpuissants !',[{text:'JOUER !',fn:()=>{tutDone=true;saveGame();}}],'🌀');}}],'💰');}}],'🎰');
+    },700);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SCROLL
+// ═══════════════════════════════════════════════
+function doScroll(){
+  stats.scrolls++;
+  playSFX('scroll');
+  const ph=document.getElementById('phone');
+  ph.style.transform='rotateX(8deg) scale(.97)';
+  setTimeout(()=>ph.style.transform='',120);
+
+  const ap=curPhone();
+  let luck=ap.l;
+  if(evActive==='luck2')luck*=2;
+  else if(evActive==='luck4')luck*=4;
+  else if(evActive==='mega')luck*=3;
+
+  // Pick rarity
+  const r=Math.random()*100;
+  let rar='Common';
+  for(const k of ['OG','Exotique','Mythique','Legendary','Epic','Super Rare','Rare']){
+    if(r<RD[k].th*luck){rar=k;break;}
+  }
+
+  // Pick emoji
+  const pool=EMOJIS[rar];
+  const em=pool[Math.floor(Math.random()*pool.length)];
+
+  // Mutation
+  let mutBonus=1;
+  if(evActive==='mutations'||evActive==='rainbow')mutBonus=5;
+  let mut=NO_MUT;
+  if(adminForcedMut){
+    mut=MUTS.find(m=>m.name===adminForcedMut)||NO_MUT;
+    adminForcedMut=null; // consume the forced mutation
+  } else {
+    const mr=Math.random()*100;
+    for(const m of MUTS){if(mr<m.chance*mutBonus){mut=m;break;}}
+  }
+
+  // Income multiplier
+  let gainMul=mut.multi;
+  if(evActive==='money2')gainMul*=2;
+  else if(evActive==='money4')gainMul*=4;
+
+  const priceBase=RD[rar].p*(0.8+Math.random()*.4)*(evActive==='cheap'?0.5:1);
+
+  curEmoji={
+    symbol:em.s, name:em.n, rarity:rar,
+    price:Math.floor(priceBase),
+    gain:Math.floor(RD[rar].p*.1*gainMul),
+    mut, mutCls:mut.cls, mutColor:mut.color, mutGr:mut.gr,
+    color:RD[rar].c, glow:RD[rar].glow,
+    mutName:mut.name==='Normal'?'':mut.name
+  };
+
+  // Animate
+  const disp=document.getElementById('emojiDisp');
+  disp.className='scroll-reveal '+(curEmoji.mutCls||'');
+
+  // Show confirm for rare/special — respect settings
+  const specRar=['OG','Exotique','Mythique'];
+  const specMut=['MASTER','ARC-EN-CIEL'];
+  let shouldConfirm=false;
+  if(rar==='Mythique'&&confirmSettings.mythique)shouldConfirm=true;
+  if(rar==='Exotique'&&confirmSettings.exotique)shouldConfirm=true;
+  if(rar==='OG'&&confirmSettings.og)shouldConfirm=true;
+  if(mut.name==='MASTER'&&confirmSettings.master)shouldConfirm=true;
+  if(mut.name==='ARC-EN-CIEL'&&confirmSettings.master)shouldConfirm=true;
+  if(shouldConfirm){
+    pendingCfm=curEmoji;
+    showCfm(curEmoji);
+    playSFX('leg');
+  }
+  updateUI();
+}
+
+function showCfm(e){
+  document.getElementById('cfmE').textContent=e.symbol;
+  document.getElementById('cfmE').className='cfm-emoji '+(e.mutCls||'');
+  document.getElementById('cfmN').textContent=e.name;
+  document.getElementById('cfmR').textContent='✦ '+e.rarity+' ✦';
+  document.getElementById('cfmR').style.color=e.color;
+  const ml=mutLbl(e.mut);
+  document.getElementById('cfmM').textContent=ml?'⚡ MUTATION: '+ml:'';
+  document.getElementById('cfmM').style.color=e.mutColor||'#fff';
+  document.getElementById('cfmOv').style.display='flex';
+}
+function doCfmBuy(){
+  document.getElementById('cfmOv').style.display='none';
+  if(pendingCfm){buyDirect(pendingCfm);pendingCfm=null;}
+}
+function cancelCfm(){
+  document.getElementById('cfmOv').style.display='none';
+  pendingCfm=null;
+  doScroll();
+}
+function buyCurrentEmoji(){
+  if(!curEmoji)return;
+  if(document.getElementById('cfmOv').style.display==='flex')return;
+  buyDirect(curEmoji);
+}
+
+function buyDirect(e){
+  const slots=effSlots();
+  if(inventory.length>=slots){
+    playSFX('error');showToast(t('bagFull'),'err');
+    const ph=document.getElementById('phone');ph.classList.add('bag-full-anim');setTimeout(()=>ph.classList.remove('bag-full-anim'),500);
+    return;
+  }
+  if(money<e.price){
+    playSFX('error');showToast(t('noMoney'),'err');
+    const d=document.getElementById('emojiDisp');d.classList.add('shake');setTimeout(()=>d.classList.remove('shake'),600);
+    const pe=document.getElementById('emojiPrice');pe.style.color='#ef4444';pe.style.fontWeight='900';setTimeout(()=>{pe.style.color='';pe.style.fontWeight='';},600);
+    const mb=document.getElementById('moneyDisp');mb.style.borderColor='#ef4444';mb.style.color='#ef4444';setTimeout(()=>{mb.style.borderColor='';mb.style.color='';},600);
+    return;
+  }
+  money-=e.price;
+  inventory.push({...e,id:Date.now()});
+  // Track stats
+  if(inventory.length>=slots)stats.bagFills++;
+  if(e.mutCls==='mut-gold')stats.mutGold++;
+  if(e.mutCls==='mut-master')stats.mutMaster++;
+  if(['Legendary','Mythique'].includes(e.rarity))stats.legFound++;
+  if(e.rarity==='OG')stats.ogFound++;
+  playSFX('buy');
+  // Discovery
+  const dk=e.name+'__'+(e.mutName||'Normal');
+  const isNew=!discovered[dk];
+  discovered[dk]=(discovered[dk]||0)+1;
+  if(isNew)showDiscovery(e);
+  doScroll();
+  updateUI();
+}
+
+function showDiscovery(e){
+  playSFX('disc');
+  document.getElementById('discE').textContent=e.symbol;
+  document.getElementById('discE').className=e.mutCls||'';
+  document.getElementById('discN').textContent=e.name+(mutLbl(e.mut)?' ('+mutLbl(e.mut)+')':'');
+  document.getElementById('discR').textContent='✦ '+e.rarity+' ✦';
+  document.getElementById('discR').style.color=e.color;
+  const ov=document.getElementById('discOv');ov.style.display='flex';setTimeout(()=>ov.style.display='none',3000);
+}
+
+// ═══════════════════════════════════════════════
+// UPDATE UI
+// ═══════════════════════════════════════════════
+function updateUI(){
+  document.getElementById('moneyDisp').textContent=fmt(money)+' $';
+  const slots=effSlots();
+  document.getElementById('slotsDisp').textContent=inventory.length+'/'+slots;
+  const ap=curPhone();
+  document.getElementById('luckDisp').textContent=fmt(ap.l);
+  // Nom du phone dans la luck-pill uniquement (plus de phoneName redondant sous le téléphone)
+  const pnh=document.getElementById('phoneNameHud');if(pnh)pnh.textContent=ap.n;
+
+  if(curEmoji){
+    const d=document.getElementById('emojiDisp');
+    d.textContent=curEmoji.symbol;
+    if(!d.classList.contains('scroll-reveal'))d.className=curEmoji.mutCls||'';
+
+    document.getElementById('emojiName').textContent=curEmoji.name;
+
+    const rt=document.getElementById('rarityTag');
+    rt.textContent=curEmoji.rarity;
+    rt.style.background=curEmoji.color+'33';
+    rt.style.color=curEmoji.color;
+    rt.style.border='1px solid '+curEmoji.color+'66';
+
+    const ml=mutLbl(curEmoji.mut);
+    document.getElementById('mutTag').textContent=ml;
+    document.getElementById('mutTag').style.color=curEmoji.mutColor||curEmoji.color;
+    document.getElementById('emojiGain').textContent='+'+fmt(curEmoji.gain)+'/s';
+    document.getElementById('emojiPrice').textContent=fmt(curEmoji.price)+' $';
+
+    // Glow ring
+    const gr=document.getElementById('glowRing');
+    if(curEmoji.mutGr){gr.className='vis '+curEmoji.mutGr;}
+    else gr.className='';
+
+    // Phone glow
+    const pg=document.getElementById('phoneGlow');
+    pg.style.background='radial-gradient(circle,'+curEmoji.glow+' 0%,transparent 70%)';
+    pg.style.opacity='1';
+
+    // Buy btn
+    const bb=document.getElementById('buyBtn');
+    const canBuy=money>=curEmoji.price&&inventory.length<slots;
+    bb.textContent='ACHETER — '+fmt(curEmoji.price)+' $';
+    bb.className='buy-btn '+(canBuy?'can':'cant');
+  } else {
+    document.getElementById('glowRing').className='';
+    document.getElementById('buyBtn').className='buy-btn cant';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// INVENTORY
+// ═══════════════════════════════════════════════
+function renderInventory(){
+  document.getElementById('totalIncome').textContent=fmt(getIncome());
+  let h='';
+  // Emoji blocks section
+  if(emojiBlocks.length>0){
+    h+=`<div style="background:rgba(168,85,247,.08);border:2px solid rgba(168,85,247,.3);border-radius:1.2rem;padding:1rem;margin-bottom:1rem">
+      <div style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:2px;color:#a855f7;margin-bottom:.6rem">📦 EMOJI BLOCKS (${emojiBlocks.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.6rem">
+        ${emojiBlocks.map((b,i)=>`<div style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.4);border-radius:.8rem;padding:.5rem .8rem;display:flex;gap:.4rem">
+          <button class="btn purple sm" onclick="openEmojiBlock(${i})" style="padding:.3rem .6rem;font-size:.7rem">📦 OUVRIR</button>
+          <button class="btn ghost sm" onclick="sellEmojiBlock(${i})" style="padding:.3rem .6rem;font-size:.7rem">💰 VENDRE</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  h+=inventory.length?
+    inventory.map((e,i)=>`<div class="card" style="border-left:3px solid ${e.color}"><span class="${e.mutCls||''}" style="font-size:2.2rem;flex-shrink:0">${e.symbol}</span><div style="flex:1;margin:0 .8rem"><div style="font-weight:900;font-size:.9rem">${e.name}${e.mutName?` <span style="font-size:.7rem;color:${e.mutColor||e.color}">[${e.mutName}]</span>`:''}</div><div style="color:var(--money);font-weight:900;font-size:.85rem">+${fmt(e.gain)}/s</div><div style="opacity:.4;font-size:.7rem;color:${e.color}">${e.rarity}</div></div><button class="btn danger sm" onclick="removeItem(${i})">🗑</button></div>`).join('')
+    :`<p style="text-align:center;opacity:.4;margin-top:3rem">🎒 Sac vide</p>`;
+  document.getElementById('invList').innerHTML=h;
+}
+function removeItem(i){inventory.splice(i,1);playSFX('error');renderInventory();updateUI();}
+
+// EMOJI BLOCK opening
+const BLOCK_REWARDS=[
+  {weight:45,rarity:'Common'},
+  {weight:30,rarity:'Rare'},
+  {weight:15,rarity:'Super Rare'},
+  {weight:6, rarity:'Epic'},
+  {weight:3, rarity:'Legendary'},
+  {weight:.8,rarity:'Mythique'},
+  {weight:.2,rarity:'OG'}
+];
+function pickBlockReward(){
+  const total=BLOCK_REWARDS.reduce((s,r)=>s+r.weight,0);
+  let r=Math.random()*total;
+  for(const rw of BLOCK_REWARDS){r-=rw.weight;if(r<=0)return rw.rarity;}
+  return 'Common';
+}
+function openEmojiBlock(i){
+  emojiBlocks.splice(i,1);
+  // Animate
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:12000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem';
+  const emojisScroll=['😀','🌟','💎','🔥','👑','🦄','⚡','🌈','💫','✨','😺','🏆','💜','🎰','🐉','🦋'];
+  let frame=0,speed=100,idx2=0;
+  const emoEl=document.createElement('div');
+  emoEl.style.cssText='font-size:6rem;transition:transform .1s';
+  const lbl=document.createElement('div');
+  lbl.style.cssText='font-family:"Bebas Neue";font-size:1.2rem;letter-spacing:3px;opacity:.6';
+  lbl.textContent='OUVERTURE...';
+  modal.appendChild(emoEl);modal.appendChild(lbl);
+  document.body.appendChild(modal);
+  const rar=pickBlockReward();
+  const pool=EMOJIS[rar];
+  const em=pool[Math.floor(Math.random()*pool.length)];
+  const mut=Math.random()<0.3?MUTS[Math.floor(Math.random()*MUTS.length)]:NO_MUT;
+  const result={symbol:em.s,name:em.n,rarity:rar,price:RD[rar].p,gain:Math.floor(RD[rar].p*.1*mut.multi),mut,mutCls:mut.cls,mutColor:mut.color,mutGr:mut.gr,color:RD[rar].c,glow:RD[rar].glow,mutName:mut.name==='Normal'?'':mut.name,id:Date.now()};
+  let step=0,maxSteps=25;
+  function spin(){
+    emoEl.textContent=emojisScroll[idx2%emojisScroll.length];
+    emoEl.style.transform=`scale(${1+Math.random()*.2}) rotate(${Math.random()*30-15}deg)`;
+    idx2++;step++;
+    if(step<maxSteps){
+      speed=Math.min(speed+step*8,600);
+      setTimeout(spin,speed);
+    } else {
+      // Reveal
+      emoEl.textContent=result.symbol;
+      emoEl.className=result.mutCls||'';
+      emoEl.style.transform='scale(1.3) rotate(0)';
+      lbl.textContent=result.rarity.toUpperCase()+(result.mutName?' — '+result.mutName:'');
+      lbl.style.color=result.color;
+      playSFX('leg');
+      const btn=document.createElement('button');
+      btn.className='btn primary';btn.style.marginTop='1rem';
+      btn.textContent='✅ RÉCUPÉRER';
+      btn.onclick=()=>{
+        document.body.removeChild(modal);
+        const slots=effSlots();
+        if(inventory.length<slots){inventory.push(result);showToast('📦 '+result.name+' obtenu !','ok');playSFX('buy');}
+        else showToast('Sac plein ! L\'émoji est perdu.','err');
+        renderInventory();updateUI();saveGame();
+      };
+      modal.appendChild(btn);
+    }
+  }
+  spin();
+}
+function sellEmojiBlock(i){
+  emojiBlocks.splice(i,1);money+=100000;
+  showToast('💰 Emoji Block vendu : +100K $','ok');renderInventory();updateUI();saveGame();
+}
+
+// ═══════════════════════════════════════════════
+// QUESTS
+// ═══════════════════════════════════════════════
+function renderQuests(){
+  const done=claimed.length,tot=QUESTS.length;
+  let h=`<div style="text-align:center;margin-bottom:1.2rem;font-family:'Bebas Neue';font-size:1.1rem;color:var(--accent)">${done} / ${tot} MISSIONS<div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${(done/tot)*100}%"></div></div></div>`;
+  h+=QUESTS.map(q=>{
+    const desc=lang==='en'?q.en:lang==='es'?q.es:q.fr;
+    const curr=qCurr(q),iscl=claimed.includes(q.id),can=!iscl&&curr>=q.target,pct=Math.min(100,(curr/q.target)*100);
+    return `<div class="card" style="flex-direction:column;align-items:stretch;opacity:${iscl?.5:1};border-left:3px solid ${iscl?'var(--money)':can?'var(--accent)':'var(--gb)'}">
+      <div style="display:flex;align-items:center;margin-bottom:.5rem">
+        <span style="font-size:1.4rem;margin-right:.6rem">${q.e||'🎯'}</span>
+        <div style="flex:1"><div style="font-weight:900;font-size:.85rem">${desc}</div><div style="opacity:.55;font-size:.72rem">${fmt(curr)} / ${fmt(q.target)} · +${fmt(q.reward)} $</div></div>
+        ${iscl?`<span style="color:var(--money);font-size:1.2rem">✅</span>`:`<button class="btn sm ${can?'primary':'ghost'}" onclick="claimQ(${q.id})">${can?'RÉCUP':'⏳'}</button>`}
+      </div>
+      <div class="pbar"><div class="pfill" style="width:${pct}%;${iscl?'background:var(--money);':''}"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('questList').innerHTML=h;
+}
+function claimQ(id){
+  const q=QUESTS.find(x=>x.id===id);
+  if(!q||claimed.includes(id))return;
+  if(qCurr(q)>=q.target){
+    claimed.push(id);money+=q.reward;playSFX('buy');
+    showToast('Récompense récupérée ! +'+fmt(q.reward)+' $','ok');
+    renderQuests();updateUI();saveGame();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// INDEX
+// ═══════════════════════════════════════════════
+function setIdxTab(t){idxTab=t;renderIndex();}
+// Index completion rewards (point 3)
+const INDEX_CASES=[
+  {id:'case_gold',    name:'Coque Or',      emoji:'🥇', color:'#ffd700', grad:'linear-gradient(135deg,#ffd700,#b8860b)', questId:'gold_complete',   desc:'Complète l\'index Or'},
+  {id:'case_diamond', name:'Coque Diamant',  emoji:'💎', color:'#b9f2ff', grad:'linear-gradient(135deg,#b9f2ff,#0ea5e9)', questId:'diamond_complete',desc:'Complète l\'index Diamant'},
+  {id:'case_rainbow', name:'Coque Arc-en-Ciel',emoji:'🌈',color:'#ff6b81',grad:'linear-gradient(135deg,#ff6b81,#ffda79,#6bffb8)',questId:'rainbow_complete',desc:'Complète l\'index Arc-en-Ciel'},
+  {id:'case_master',  name:'Coque Master',   emoji:'💜', color:'#ff00ff', grad:'linear-gradient(135deg,#ff00ff,#7c3aed)', questId:'master_complete', desc:'Complète l\'index Master'},
+  {id:'case_all',     name:'Coque Ultime',   emoji:'✨', color:'#facc15', grad:'linear-gradient(135deg,#facc15,#f43f5e,#a855f7)', questId:'all_emojis',  desc:'Débloque tous les émojis'},
+  {id:'case_quests',  name:'Coque Légende',  emoji:'🏆', color:'#f59e0b', grad:'linear-gradient(135deg,#f59e0b,#b45309)', questId:'all_quests',   desc:'Complète toutes les missions'},
+  {id:'case_rank1',   name:'Coque Champion', emoji:'👑', color:'#ffd700', grad:'linear-gradient(135deg,#ffd700,#ff6b81,#a855f7)', questId:'rank1',       desc:'Sois #1 du Classement ⚡ Ultra rare'}
+];
+const INDEX_EMOJIS={OR:['🥇','🌕','✨','⭐','💛'], DIAMANT:['💎','🔷','❄️','🫧','🌊'], 'ARC-EN-CIEL':['🌈','🎨','🦋','🌸','💐'], MASTER:['💫','🌟','⚡','🔮','🌀']};
+function renderIndex(){
+  const tabs=[{k:'Normal',l:'NORMAL'},...MUTS.map(m=>({k:m.name,l:lang==='en'?m.name_en:lang==='es'?m.name_es:m.name}))];
+  document.getElementById('idxTabs').innerHTML=tabs.map(t=>`<button class="tab-btn${idxTab===t.k?' active':''}" onclick="setIdxTab('${t.k}')">${t.l}</button>`).join('');
+  const allDisc=Object.keys(discovered).length;
+  const allPoss=Object.values(EMOJIS).reduce((s,a)=>s+a.length,0)*tabs.length;
+  document.getElementById('colProg').textContent=allDisc+' / '+allPoss+' '+t('discovered');
+
+  // Check index completion
+  const mutComplete={};
+  MUTS.forEach(m=>{
+    const count=Object.values(EMOJIS).reduce((s,arr)=>s+arr.filter(e=>discovered[e.n+'__'+m.name]).length,0);
+    const total=Object.values(EMOJIS).reduce((s,a)=>s+a.length,0);
+    mutComplete[m.name]=(count>=total);
+  });
+  const allComplete=(allDisc>=allPoss);
+  const allQuestsDone=(QUESTS.every(q=>claimed.includes(q.id)));
+
+  // Visual checkmarks for indices (point 7)
+  let checkH='<div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.2rem">';
+  MUTS.forEach(m=>{
+    const emoRing=(INDEX_EMOJIS[m.name]||[]);
+    const done=mutComplete[m.name];
+    const color={OR:'#ffd700',DIAMANT:'#b9f2ff','ARC-EN-CIEL':'#ff6b81',MASTER:'#ff00ff'}[m.name]||'#fff';
+    checkH+=`<div style="background:rgba(255,255,255,.04);border:1px solid ${done?color:'var(--gb)'};border-radius:1rem;padding:.6rem .9rem;display:flex;align-items:center;gap:.4rem;flex:1;min-width:120px;cursor:default">
+      <span style="font-size:1.2rem">${done?'✅':'🔲'}</span>
+      <span style="font-weight:900;font-size:.8rem;color:${done?color:'rgba(255,255,255,.4)'}">${m.name}</span>
+      ${done?emoRing.map(e=>`<span style="font-size:.9rem">${e}</span>`).join(''):`<span style="font-size:.65rem;opacity:.4">Incomplet</span>`}
+    </div>`;
+  });
+  checkH+='</div>';
+
+  let h=checkH;
+  for(const r in EMOJIS){
+    const arr=EMOJIS[r];
+    const discN=arr.filter(e=>discovered[e.n+'__'+idxTab]).length;
+    h+=`<div style="width:100%;margin-bottom:1.2rem"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem"><span style="color:${RD[r].c};font-family:'Bebas Neue';font-size:1.1rem">${r}</span><span style="opacity:.5;font-size:.75rem">${discN}/${arr.length}</span></div><div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    arr.forEach(e=>{const k=e.n+'__'+idxTab,cnt=discovered[k]||0;h+=`<div class="idx-e ${cnt?'disc':'und'}" title="${cnt?e.n:'???'}"><span ${idxTab!=='Normal'?`class="${idxTab==='OR'?'mut-gold':idxTab==='DIAMANT'?'mut-diamond':idxTab==='ARC-EN-CIEL'?'mut-rainbow':idxTab==='MASTER'?'mut-master':''}"`:''} >${cnt?e.s:'❓'}</span>${cnt>1?`<span class="idx-cnt">${cnt>9?'9+':cnt}</span>`:''}</div>`;});
+    h+='</div></div>';
+  }
+  document.getElementById('idxContent').innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════
+// SHOP
+// ═══════════════════════════════════════════════
+// Secret codes available for purchase in shop
+const SHOP_CODES=[
+  {id:'code_gold',    name:'Code GOLD',     emoji:'🟡', color:'#ffd700', desc:'Offre une mutation OR garantie',    price:250000,   effect:()=>{adminForcedMut='OR';showToast('🟡 Prochaine mutation sera OR !','ok');}},
+  {id:'code_diamond', name:'Code DIAMOND',  emoji:'💎', color:'#b9f2ff', desc:'Offre une mutation DIAMANT garantie',price:1000000,  effect:()=>{adminForcedMut='DIAMANT';showToast('💎 Prochaine mutation sera DIAMANT !','ok');}},
+  {id:'code_rainbow', name:'Code RAINBOW',  emoji:'🌈', color:'#ff6b81', desc:'Active l\'event Arc-en-Ciel 1min',  price:5000000,  effect:()=>{adminActivateEvent('rainbow');}},
+  {id:'code_master',  name:'Code MASTER',   emoji:'💜', color:'#ff00ff', desc:'Offre une mutation MASTER garantie', price:10000000, effect:()=>{adminForcedMut='MASTER';showToast('💜 Prochaine mutation sera MASTER !','ok');}},
+  {id:'code_cheap',   name:'Code SOLDES',   emoji:'🏷️', color:'#f59e0b', desc:'Active l\'event Soldes −50% 90s',   price:800000,   effect:()=>{adminActivateEvent('cheap');}},
+  {id:'code_luck',    name:'Code LUCK ×4',  emoji:'🍀', color:'#00d4ff', desc:'Active l\'event Luck ×4 90s',        price:3000000,  effect:()=>{adminActivateEvent('luck4');}},
+  {id:'code_block',   name:'Code BLOCK',    emoji:'📦', color:'#a855f7', desc:'Ajoute un Emoji Block à l\'inventaire',price:500000, effect:()=>{emojiBlocks.push({id:Date.now()});showToast('📦 Emoji Block ajouté !','ok');}},
+  {id:'code_mega',    name:'Code MÉGA',     emoji:'🚀', color:'#f43f5e', desc:'Active l\'event Méga Scroll 60s',    price:2000000,  effect:()=>{adminActivateEvent('mega');}},
+];
+let shopCodes=[], adminForcedMut=null;
+let boughtShopCodes=[], boughtShopPhones=[];
+
+function refreshShop(){
+  // 2 phones — already-bought CAN reappear to equip
+  const allP=[...SHOP_PHONES].sort(()=>Math.random()-.5);
+  shopPhones=allP.slice(0,2);
+  // 2 skins — can reappear
+  shopSkins=SKINS.filter(s=>s.price>0).sort(()=>Math.random()-.5).slice(0,2);
+  // 2 codes — random each reset, reset le stock aussi
+  const shuffled=[...SHOP_CODES].sort(()=>Math.random()-.5);
+  shopCodes=shuffled.slice(0,2).map(c=>({...c}));
+  boughtShopCodes=[]; // reset rupture de stock
+  boughtShopPhones=[]; // reset téléphones achetés ce reset
+  shopReset=Date.now()+120000;
+  // 30% chance emoji block offer
+  shopHasBlock=Math.random()<0.3;
+}
+let shopHasBlock=false;
+
+function renderShop(){
+  let h='';
+
+  // PHONES — styled cards
+  h+=`<div style="font-family:'Bebas Neue';letter-spacing:2px;font-size:1.1rem;margin-bottom:.8rem;color:var(--accent)">📱 TÉLÉPHONES</div>`;
+  if(!shopPhones.length){h+=`<p style="opacity:.4;text-align:center;margin-bottom:1rem">Aucun téléphone disponible</p>`;}
+  shopPhones.forEach(p=>{
+    const own=ownedPhones.includes(p.n);
+    const boughtThisReset=boughtShopPhones&&boughtShopPhones.includes(p.n);
+    h+=`<div style="background:linear-gradient(135deg,${p.c}${boughtThisReset?'11':'22'},${p.c}08);border:2px solid ${p.c}${boughtThisReset?'22':'55'};border-radius:1.4rem;padding:1rem 1.2rem;margin-bottom:.8rem;position:relative;overflow:hidden${boughtThisReset?';opacity:.55':''}">
+      <div style="position:absolute;top:0;right:0;width:80px;height:80px;border-radius:0 1.4rem 0 80px;background:${p.c}15"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div style="width:44px;height:60px;border-radius:8px;border:3px solid ${p.c};background:linear-gradient(160deg,${p.c}33,${p.c}11);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">📱</div>
+        <div style="flex:1">
+          <div style="font-weight:900;font-size:1rem;font-family:'Bebas Neue';letter-spacing:1px">${p.n}</div>
+          <div style="font-size:.75rem;opacity:.7;margin-top:2px">🍀 Luck ×${p.l}</div>
+          <div style="font-size:.65rem;color:${boughtThisReset?'#ef4444':own?'var(--money)':p.c};font-weight:900;margin-top:3px">${boughtThisReset?'❌ VENDU ce reset':own?'✓ Déjà possédé':'🛒 Disponible'}</div>
+        </div>
+        ${boughtThisReset
+          ?`<span style="opacity:.4;font-size:.7rem;font-family:'Bebas Neue'">RUPTURE</span>`
+          :own
+            ?`<button class="btn info sm" onclick="equipPhone('${p.n}')">ÉQUIPER</button>`
+            :`<button class="btn primary sm" onclick="buyItem('phone','${p.n}',${p.price})" style="background:linear-gradient(135deg,${p.c},${p.c}99);color:#000">${fmt(p.price)} $</button>`
+        }
+      </div>
+    </div>`;
+  });
+
+  // SKINS — styled
+  h+=`<div style="font-family:'Bebas Neue';letter-spacing:2px;font-size:1.1rem;margin:1.2rem 0 .8rem;color:var(--og)">🎨 COQUES</div>`;
+  shopSkins.forEach(s=>{
+    const own=ownedSkins.includes(s.id),n=s.name[lang]||s.name.fr,eq=skinId===s.id;
+    h+=`<div class="skin-card" style="${eq?'border-color:'+s.color+';box-shadow:0 0 20px '+s.color+'33;':''}">
+      <div class="skin-preview" style="background:${s.grad||s.color}">
+        <div class="skin-mini-phone" style="border-color:${s.color};${s.special?'animation:rainbowBorder 1.5s infinite;':''}"></div>
+        ${s.special?`<div style="position:absolute;top:5px;right:8px;font-size:.55rem;background:gold;color:#000;padding:1px 6px;border-radius:5px;font-weight:900">✨ SPECIAL</div>`:''}
+        ${own&&!eq?`<div style="position:absolute;top:5px;left:8px;font-size:.55rem;background:var(--money);color:#000;padding:1px 6px;border-radius:5px;font-weight:900">POSSÉDÉ</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-weight:900">${n}</div><div style="font-size:.7rem;opacity:.5">${eq?'Équipé ✓':fmt(s.price)+' $'}</div></div>
+        ${eq?`<span style="color:${s.color};font-size:1.1rem">✓</span>`:own?`<button class="btn info sm" onclick="equipSkin('${s.id}')">ÉQUIPER</button>`:`<button class="btn primary sm" onclick="buyItem('skin','${s.id}',${s.price})">${fmt(s.price)} $</button>`}
+      </div>
+    </div>`;
+  });
+
+  // CODES SECRETS — 1 achat par reset
+  h+=`<div style="font-family:'Bebas Neue';letter-spacing:2px;font-size:1.1rem;margin:1.2rem 0 .8rem;color:#a855f7">🔑 CODES SECRETS</div>`;
+  shopCodes.forEach(c=>{
+    const sold=boughtShopCodes.includes(c.id);
+    h+=`<div style="background:linear-gradient(135deg,${c.color}${sold?'0a':'18'},${c.color}05);border:2px solid ${c.color}${sold?'22':'44'};border-radius:1.4rem;padding:1rem 1.2rem;margin-bottom:.8rem;position:relative;overflow:hidden${sold?';opacity:.5':''}">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,${c.color}${sold?'06':'12'},transparent 70%);pointer-events:none"></div>
+      <div style="display:flex;align-items:center;gap:.9rem">
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,${c.color}${sold?'22':'44'},${c.color}22);border:2px solid ${c.color}${sold?'33':'66'};display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0">${sold?'🚫':c.emoji}</div>
+        <div style="flex:1">
+          <div style="font-weight:900;font-size:.95rem;font-family:'Bebas Neue';letter-spacing:1px;color:${sold?'rgba(255,255,255,.3)':c.color}">${c.name}</div>
+          <div style="font-size:.72rem;opacity:.6;margin-top:2px;line-height:1.4">${sold?'Déjà acheté ce reset — revient au prochain':c.desc}</div>
+          <div style="font-size:.68rem;color:${sold?'rgba(255,255,255,.2)':c.color};font-weight:900;margin-top:4px">${sold?'RUPTURE DE STOCK':fmt(c.price)+' $'}</div>
+        </div>
+        ${sold
+          ?`<span style="opacity:.3;font-size:.65rem;font-family:'Bebas Neue'">VENDU</span>`
+          :`<button class="btn sm" onclick="buyShopCode('${c.id}')" style="background:linear-gradient(135deg,${c.color},${c.color}99);color:#000;font-size:.7rem;padding:.4rem .8rem;border:none;flex-shrink:0">ACHETER</button>`
+        }
+      </div>
+    </div>`;
+  });
+
+  // Emoji block — 1 par reset
+  if(shopHasBlock){
+    h+=`<div style="background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(168,85,247,.05));border:2px solid rgba(168,85,247,.4);border-radius:1.4rem;padding:1rem 1.2rem;margin:1rem 0">
+      <div style="display:flex;align-items:center;gap:.9rem">
+        <div style="font-size:2.5rem">📦</div>
+        <div style="flex:1">
+          <div style="font-weight:900;font-family:'Bebas Neue';font-size:1rem;letter-spacing:1px;color:#a855f7">EMOJI BLOCK</div>
+          <div style="font-size:.72rem;opacity:.7">Ouvre pour un émoji rare ! Commun → Mythique</div>
+          <div style="font-size:.68rem;color:#a855f7;margin-top:3px;font-weight:900">500 000 $</div>
+        </div>
+        <button class="btn purple sm" onclick="buyEmojiBlock()">ACHETER</button>
+      </div>
+    </div>`;
+  }
+
+  // Cases link
+  h+=`<div style="margin-top:1.2rem;border-top:1px solid var(--gb);padding-top:1rem">
+    <button class="btn ghost full" onclick="closePanel('shopPanel');openPanel('skinPanel')" style="opacity:.55;font-size:.72rem">🎨 TOUTES LES COQUES →</button>
+  </div>`;
+
+  document.getElementById('shopContent').innerHTML=h;
+}
+
+function buyShopCode(id){
+  if(boughtShopCodes.includes(id)){showToast('Déjà acheté ce reset !','err');playSFX('error');return;}
+  const code=SHOP_CODES.find(c=>c.id===id);if(!code)return;
+  if(money<code.price){playSFX('error');showToast(t('noMoney'),'err');return;}
+  money-=code.price;playSFX('buy');
+  boughtShopCodes.push(id); // marquer rupture de stock
+  code.effect();
+  showToast('🔑 '+code.name+' activé !','ok');
+  updateUI();saveGame();renderShop();
+}
+function buyEmojiBlock(){
+  if(money<500000){playSFX('error');showToast(t('noMoney'),'err');return;}
+  money-=500000;emojiBlocks.push({id:Date.now()});shopHasBlock=false; // 1 seul par reset
+  showToast('📦 Emoji Block acheté ! Ouvre dans l\'inventaire.','ok');playSFX('buy');
+  renderShop();updateUI();saveGame();
+}
+function buyItem(type,id,price){
+  if(money<price){playSFX('error');showToast(t('noMoney'),'err');return;}
+  money-=price;playSFX('buy');
+  if(type==='phone'){
+    ownedPhones.push(id);phoneIdx=ownedPhones.length-1;
+    boughtShopPhones.push(id); // marquer acheté ce reset
+    showToast('📱 '+id+' '+t('phoneBought'),'ok');
+  } else {
+    ownedSkins.push(id);skinId=id;applySkin();showToast(t('skinBought'),'ok');
+  }
+  renderShop();updateUI();saveGame();
+}
+
+// ═══════════════════════════════════════════════
+// PHONES
+// ═══════════════════════════════════════════════
+function renderPhones(){
+  document.getElementById('phonesList').innerHTML=allPhones().map(p=>{
+    const locked=p.rb!==undefined&&rebirthLv<p.rb;
+    const own=ownedPhones.includes(p.n);
+    const eq=ownedPhones[phoneIdx]===p.n;
+    return `<div class="ph-card${eq?' eq':''}"><div class="ph-dot" style="background:${p.c}"></div><div style="flex:1"><div style="font-weight:900">${p.n}</div><div style="opacity:.5;font-size:.75rem">🍀 Luck ×${p.l}${p.rb?' · RB ${p.rb}':''}</div></div>${locked?`<span style="color:#ef4444;font-size:.75rem;opacity:.7">🔒 RB ${p.rb}</span>`:eq?`<span style="color:var(--accent);font-weight:900;font-size:.8rem">ÉQUIPÉ ✓</span>`:own?`<button class="btn info sm" onclick="equipPhone('${p.n}')">ÉQUIPER</button>`:`<span style="opacity:.4;font-size:.75rem">🛒 Shop</span>`}</div>`;
+  }).join('');
+}
+function equipPhone(n){phoneIdx=ownedPhones.indexOf(n);renderPhones();updateUI();playSFX('buy');}
+
+// ═══════════════════════════════════════════════
+// SKINS
+// ═══════════════════════════════════════════════
+function renderSkins(){
+  const allDisc=Object.keys(discovered).length;
+  const allPoss=Object.values(EMOJIS).reduce((s,a)=>s+a.length,0)*(1+MUTS.length);
+  const allComplete=(allDisc>=allPoss);
+  const allQuestsDone=QUESTS.every(q=>claimed.includes(q.id));
+  const mutComplete={};
+  MUTS.forEach(m=>{
+    const count=Object.values(EMOJIS).reduce((s,arr)=>s+arr.filter(e=>discovered[e.n+'__'+m.name]).length,0);
+    const total=Object.values(EMOJIS).reduce((s,a)=>s+a.length,0);
+    mutComplete[m.name]=(count>=total);
+  });
+  const caseUnlocked={
+    case_gold:mutComplete['OR'],case_diamond:mutComplete['DIAMANT'],
+    case_rainbow:mutComplete['ARC-EN-CIEL'],case_master:mutComplete['MASTER'],
+    case_all:allComplete,case_quests:allQuestsDone,
+    case_rank1:ownedSkins.includes('case_rank1')
+  };
+  let h=`<div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;opacity:.7;margin-bottom:.8rem">🎨 COQUES CLASSIQUES</div>`;
+  h+=SKINS.map(s=>{
+    const own=ownedSkins.includes(s.id),eq=skinId===s.id,n=s.name[lang]||s.name.fr;
+    return `<div class="skin-card" style="${eq?'border-color:'+s.color+';box-shadow:0 0 25px '+s.color+'44;':!own?'opacity:.5;':''}" onclick="${own?`equipSkin('${s.id}')`:money>=s.price?`buyItem('skin','${s.id}',${s.price})`:''}" >
+      <div class="skin-preview" style="background:${s.grad||s.color}">
+        <div class="skin-mini-phone" style="border-color:${s.color};${s.special?'animation:rainbowBorder 1.5s infinite;':''}"></div>
+        ${s.special?`<div style="position:absolute;top:5px;right:8px;font-size:.6rem;background:gold;color:#000;padding:2px 7px;border-radius:6px;font-weight:900">✨ SPECIAL</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-weight:900">${n}</div><div style="font-size:.7rem;opacity:.5">${own?(eq?'✓ Équipé':'Débloqué'):fmt(s.price)+' $'}</div></div>
+        ${eq?`<span style="color:${s.color};font-size:1.2rem">✓</span>`:own?`<button class="btn info sm" onclick="event.stopPropagation();equipSkin('${s.id}')">ÉQUIPER</button>`:`<button class="btn primary sm" onclick="event.stopPropagation();buyItem('skin','${s.id}',${s.price})">${fmt(s.price)} $</button>`}
+      </div>
+    </div>`;
+  }).join('');
+  h+=`<div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--og);margin:1.5rem 0 .8rem">🏆 COQUES COLLECTION</div>`;
+  h+=INDEX_CASES.map(c=>{
+    const unlocked=caseUnlocked[c.id];const equipped=skinId===c.id;
+    return `<div class="skin-card" style="${equipped?'border-color:'+c.color+';box-shadow:0 0 25px '+c.color+'44;':!unlocked?'opacity:.4;filter:grayscale(.6);':'border-color:'+c.color+'66;'}" >
+      <div class="skin-preview" style="background:${c.grad}">
+        <div style="font-size:2.8rem">${c.emoji}</div>
+        ${!unlocked?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;font-family:'Bebas Neue'">🔒 BLOQUÉ</div>`:''}
+        ${unlocked&&!equipped?`<div style="position:absolute;top:5px;right:8px;font-size:.6rem;background:${c.color};color:#000;padding:2px 7px;border-radius:6px;font-weight:900">DÉBLOQUÉ ✅</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:900;color:${unlocked?c.color:'rgba(255,255,255,.5)'}">${c.name}</div>
+          <div style="font-size:.7rem;opacity:.6;margin-top:2px">📋 ${c.desc}</div>
+        </div>
+        ${equipped?`<span style="color:${c.color};font-weight:900;font-size:.8rem">✓ ÉQUIPÉ</span>`:unlocked?`<button class="btn sm" style="background:${c.grad};color:#000;border:none" onclick="equipCollectionCase('${c.id}')">ÉQUIPER</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('skinList').innerHTML=h;
+}
+function equipSkin(id){skinId=id;applySkin();renderSkins();saveGame();}
+function equipCollectionCase(id){
+  const c=INDEX_CASES.find(x=>x.id===id);if(!c)return;
+  skinId=id;
+  document.getElementById('phone').style.borderColor=c.color;
+  document.getElementById('phone').style.boxShadow=`0 30px 60px -15px rgba(0,0,0,.7),0 0 30px ${c.color}44`;
+  renderSkins();saveGame();showToast('🏆 Coque '+c.name+' équipée !','ok');
+}
+function applySkin(){
+  const ph=document.getElementById('phone');
+  // Remove rainbow skin class always first
+  ph.classList.remove('skin-rainbow');
+  // Remove rainbow bg overlay if exists
+  const oldRb=ph.querySelector('.skin-rainbow-bg');if(oldRb)oldRb.remove();
+
+  const c=INDEX_CASES.find(x=>x.id===skinId);
+  if(c){ph.style.borderColor=c.color;ph.style.boxShadow='';ph.style.animation='';return;}
+  const s=SKINS.find(x=>x.id===skinId)||SKINS[0];
+  ph.style.borderColor=s.color;
+  ph.style.boxShadow='';
+  ph.style.animation='';
+  if(s.id==='rainbow'){
+    ph.classList.add('skin-rainbow');
+    ph.style.borderColor='';
+    // Add animated rainbow background overlay
+    const rbBg=document.createElement('div');
+    rbBg.className='skin-rainbow-bg';
+    ph.insertBefore(rbBg,ph.firstChild);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// FUSION
+// ═══════════════════════════════════════════════
+function renderFusion(){
+  const s0=fusSlots[0]!==null&&inventory[fusSlots[0]]?inventory[fusSlots[0]]:null;
+  const s1=fusSlots[1]!==null&&inventory[fusSlots[1]]?inventory[fusSlots[1]]:null;
+  let h=`<div style="display:flex;justify-content:space-around;align-items:center;margin:2rem 0;gap:1rem">
+    <div class="fusion-slot${s0?' filled':''} ${fusBusy?'fus-spin':''}" onclick="pickFus(0)">${s0?`<span class="${s0.mutCls||''}">${s0.symbol}</span>`:'➕'}</div>
+    <div style="font-size:2.5rem;opacity:.5">⚡</div>
+    <div class="fusion-slot${s1?' filled':''} ${fusBusy?'fus-spin':''}" onclick="pickFus(1)">${s1?`<span class="${s1.mutCls||''}">${s1.symbol}</span>`:'➕'}</div>
+  </div>
+  <div id="fusSt" style="text-align:center;margin-bottom:1rem"></div>
+  <button class="btn danger full" style="margin-bottom:1rem" onclick="resetFus()">🔄 RESET</button>
+  <div id="fusPick"></div>`;
+  document.getElementById('fusBody').innerHTML=h;
+  updateFusSt();
+}
+function updateFusSt(){
+  const el=document.getElementById('fusSt');if(!el)return;
+  if(fusBusy)el.innerHTML=`<div style="font-size:2rem;font-family:'Bebas Neue';color:var(--accent)">${fmtT(fusEnd-Date.now())}</div><p style="opacity:.6;font-size:.8rem">Fusion en cours...</p>`;
+  else if(fusResult)el.innerHTML=`<div style="font-size:3rem;margin:.5rem 0" class="${fusResult.mutCls}">${fusResult.symbol}</div><button class="btn primary" onclick="claimFus()">⚡ CLAIM (+${fmt(fusResult.gain)}/s)</button>`;
+  else{const can=fusSlots[0]!==null&&fusSlots[1]!==null;el.innerHTML=`<button class="btn${can?' purple':' ghost'}" style="padding:.8rem 2rem" onclick="startFus()">🌀 FUSIONNER</button>`;}
+}
+function pickFus(slot){
+  if(fusBusy||fusResult)return;
+  document.getElementById('fusPick').innerHTML=inventory.map((e,i)=>{
+    const used=fusSlots.includes(i);
+    return `<div class="card" style="opacity:${used?.3:1};cursor:${used?'not-allowed':'pointer'}" onclick="${used?'':`setFusSlot(${slot},${i})`}"><span class="${e.mutCls||''}" style="font-size:1.8rem;margin-right:.8rem">${e.symbol}</span><span style="font-weight:900">${e.name}</span><span style="margin-left:auto;opacity:.6;font-size:.8rem">${e.rarity}</span></div>`;
+  }).join('')||`<p style="opacity:.4;text-align:center">Sac vide</p>`;
+}
+function setFusSlot(slot,i){
+  if(fusSlots.includes(i))return;
+  if(inventory[i]&&inventory[i].name==='Hybride'){showToast('Hybride bloqué dans la machine !','err');playSFX('error');return;}
+  const oth=slot===0?fusSlots[1]:fusSlots[0];
+  if(oth!==null&&inventory[oth]&&inventory[i]&&inventory[i].symbol===inventory[oth].symbol){showToast('Émojis identiques bloqués !','err');playSFX('error');return;}
+  fusSlots[slot]=i;document.getElementById('fusPick').innerHTML='';renderFusion();
+}
+function startFus(){
+  if(fusSlots[0]===null||fusSlots[1]===null){playSFX('error');return;}
+  const e1=inventory[fusSlots[0]],e2=inventory[fusSlots[1]];
+  if(!e1||!e2)return;
+  fusBusy=true;fusEnd=Date.now()+60000;
+  fusResult={symbol:e1.symbol+e2.symbol,name:'Hybride',rarity:'Exotique',color:'#fff',gain:(e1.gain+e2.gain)*3,mutCls:'mut-rainbow',mutName:'FUSION',mutColor:'#ff6b81',price:0,mut:{}};
+  const idx=[...fusSlots].sort((a,b)=>b-a);
+  idx.forEach(i=>{if(i!==null)inventory.splice(i,1);});
+  fusSlots=[null,null];stats.fusions++;renderFusion();playSFX('start');saveGame();
+}
+function resetFus(){fusSlots=[null,null];fusBusy=false;fusResult=null;fusEnd=null;renderFusion();}
+function claimFus(){
+  const slots=effSlots();
+  if(inventory.length<slots){inventory.push({...fusResult,id:Date.now()});fusResult=null;renderFusion();updateUI();playSFX('buy');}
+  else showToast('Sac plein !','err');
+}
+
+// ═══════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════
+function renderRank(){
+  // Revenu base du joueur SANS bonus event (comparaison équitable)
+  const myIncBase=inventory.reduce((a,e)=>a+(e.gain||0),0);
+  const myInc=getIncome();
+
+  // Ratio: #1=400M, #99=500 — formule géométrique déterministe
+  const TOP_VAL=400000000, BOT_VAL=500;
+  const RATIO=Math.pow(BOT_VAL/TOP_VAL,1/98);
+  const bots=BOT_NAMES.slice(0,99).map((n,i)=>{
+    const base=TOP_VAL*Math.pow(RATIO,i);
+    // Variation stable basée sur le nom (pas de Math.random ici)
+    const seed=((n.charCodeAt(0)*31+n.length*7)%20)/100; // 0..0.19
+    const income=i===0?400000000:Math.floor(base*(0.9+seed));
+    return {name:n, income:income, me:false};
+  });
+  bots.push({name:'▶ TOI', income:myIncBase, me:true});
+  bots.sort((a,b)=>b.income-a.income);
+
+  const medals=['🥇','🥈','🥉'];
+  const myIdx=bots.findIndex(u=>u.me);
+  const myPos=myIdx+1;
+  const isFirst=myPos===1;
+  const above=myIdx>0?bots[myIdx-1]:null;
+  const gap=above?above.income-myIncBase:0;
+
+  // Récompense coque Champion
+  if(isFirst&&!ownedSkins.includes('case_rank1')){
+    ownedSkins.push('case_rank1');
+    showToast('🏆 Coque Champion débloquée !','ok');
+    playSFX('leg');saveGame();
+  }
+
+  document.getElementById('rankList').innerHTML=
+    `<div style="text-align:center;margin-bottom:1.2rem;background:rgba(255,255,255,.03);border:1px solid ${isFirst?'gold':'var(--gb)'};border-radius:1.2rem;padding:1rem">
+      <div style="font-size:${isFirst?'2':'1.5'}rem;font-family:'Bebas Neue';color:${isFirst?'gold':'var(--accent)'};letter-spacing:2px">${isFirst?'👑 CHAMPION':'#'+myPos}</div>
+      <div style="font-size:.78rem;opacity:.7;margin-top:.3rem;color:var(--money);font-family:'Bebas Neue'">${fmt(myInc)}/s</div>
+      <div style="font-size:.68rem;opacity:.5;margin-top:.2rem">${isFirst?'🏆 Coque exclusive débloquée !':above?`→ #${myPos-1} dans +${fmt(gap)}/s`:'Continue à scroller !'}</div>
+     </div>`+
+    bots.map((u,i)=>{
+      const col=i===0?'gold':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.55)';
+      return `<div class="card" style="margin-bottom:.4rem;padding:.6rem .9rem;${u.me?'border:2px solid var(--accent);background:rgba(0,212,255,.07);':'border:1px solid rgba(255,255,255,.06);'}">
+        <div style="font-size:${i<3?.95:.8}rem;width:2.4rem;text-align:center;font-family:'Bebas Neue';flex-shrink:0;color:${col}">${i<3?medals[i]:'#'+(i+1)}</div>
+        <div style="flex:1;font-weight:${u.me?900:500};color:${u.me?'var(--accent)':i<3?col:'rgba(255,255,255,.8)'};font-size:.85rem">${u.name}</div>
+        <div style="color:var(--money);font-weight:900;font-size:.75rem;font-family:'Bebas Neue'">${fmt(u.income)}/s</div>
+      </div>`;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// REBIRTH
+// ═══════════════════════════════════════════════
+function renderRebirth(){
+  const isMax=rebirthLv>=50;
+  const cost=isMax?Infinity:10000*Math.pow(1.58,rebirthLv),can=!isMax&&money>=cost;
+  document.getElementById('rbInfo').innerHTML=`
+    <div class="total-ctr" style="margin-bottom:1rem">
+      <div style="font-size:.7rem;opacity:.7;font-family:'Bebas Neue';letter-spacing:2px">REBIRTH LEVEL</div>
+      <div style="font-size:3rem;font-family:'Bebas Neue';color:var(--og)">LV ${rebirthLv} <span style="font-size:1.2rem;opacity:.5">/ 50</span></div>
+      ${isMax?`<div style="color:gold;font-family:'Bebas Neue';letter-spacing:2px;font-size:.9rem">🌟 RENAISSANCE MAX !</div>`:''}
+    </div>
+    <div class="card" style="flex-direction:column;align-items:flex-start;gap:.5rem">
+      <b style="opacity:.7;font-size:.8rem">BONUS REBIRTH :</b>
+      <div>📦 +1 slot dans le sac</div>
+      <div>📱 Nouveau téléphone débloqué</div>
+      <div>✨ Prestige augmenté</div>
+    </div>
+    <div style="text-align:center;font-weight:900;margin:1rem 0;font-family:'Bebas Neue';font-size:1.2rem;color:${isMax?'gold':can?'var(--money)':'#ef4444'}">${isMax?'🏆 MAX LEVEL ATTEINT':'Coût : '+fmt(cost)+' $'}</div>`;
+}
+function doRebirth(){
+  if(rebirthLv>=50){showToast('🌟 Renaissance MAX atteint ! (50/50)','ok');playSFX('error');return;}
+  const cost=10000*Math.pow(1.58,rebirthLv);
+  if(money<cost){playSFX('error');showToast('Pas assez d\'argent !','err');return;}
+  money-=cost;rebirthLv++;totalSlots++;
+  const np=PHONES_BASE.find(x=>x.rb===rebirthLv);
+  if(np&&!ownedPhones.includes(np.n)){ownedPhones.push(np.n);phoneIdx=ownedPhones.length-1;showToast('📱 Nouveau téléphone débloqué !','ok');}
+  playSFX('start');updateUI();renderRebirth();saveGame();
+  showToast('⭐ REBIRTH '+rebirthLv+' !','ok');
+}
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+function renderStats(){
+  const el=document.getElementById('statsBox');if(!el)return;
+  el.innerHTML=`🖱️ Scrolls : <b>${fmt(stats.scrolls)}</b><br>💰 Total gagné : <b>${fmt(stats.total)} $</b><br>💵 Revenu/s : <b>${fmt(getIncome())} $</b><br>🌀 Fusions : <b>${stats.fusions}</b><br>⭐ Rebirth : <b>${rebirthLv}</b><br>📦 Collection : <b>${Object.keys(discovered).length}</b><br>🟡 Mutations OR : <b>${stats.mutGold}</b><br>💜 Mutations Master : <b>${stats.mutMaster}</b><br>🏅 Légendaires : <b>${stats.legFound}</b><br>👑 OG : <b>${stats.ogFound}</b>`;
+  // Render confirmation toggles
+  const ct=document.getElementById('confirmToggles');
+  if(ct){
+    const entries=[
+      {key:'mythique',label:'⭐ Mythique'},
+      {key:'exotique',label:'🌀 Ésothique'},
+      {key:'og',     label:'👑 OG'},
+      {key:'master', label:'💫 Emoji Master'}
+    ];
+    ct.innerHTML=entries.map(e=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--gb);border-radius:.7rem;padding:.5rem .8rem">
+        <span style="font-size:.75rem;font-weight:800">${e.label}</span>
+        <button class="btn sm ${confirmSettings[e.key]?'primary':'ghost'}" onclick="toggleConfirm('${e.key}')" style="padding:.3rem .7rem;font-size:.65rem">${confirmSettings[e.key]?'ON':'OFF'}</button>
+      </div>`).join('');
+  }
+  // Admin button visibility
+  const abr=document.getElementById('adminBtnRow');
+  if(abr)abr.style.display=adminUnlocked?'block':'none';
+}
+function toggleConfirm(key){
+  confirmSettings[key]=!confirmSettings[key];
+  renderStats();saveGame();
+  showToast((confirmSettings[key]?'✅ Confirmation ON':'❌ Confirmation OFF')+' pour '+key,'ok');
+}
+
+// ═══════════════════════════════════════════════
+// SECRET CODES (point 10)
+// ═══════════════════════════════════════════════
+function submitCode(){
+  const inp=document.getElementById('codeInput');
+  const code=(inp.value||'').trim().toUpperCase();
+  inp.value='';
+  // Admin code
+  if(code==='055454591'){
+    adminUnlocked=true;
+    document.getElementById('adminBtnRow').style.display='block';
+    showToast('🛡️ Mode Admin débloqué !','ok');
+    playSFX('leg');saveGame();return;
+  }
+  if(usedCodes.includes(code)){showToast('Code déjà utilisé !','err');return;}
+  if(SECRET_CODES[code]){
+    usedCodes.push(code);
+    SECRET_CODES[code]();
+    playSFX('buy');
+    saveGame();updateUI();
+  } else {
+    showToast('Code invalide ❌','err');playSFX('error');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN PANEL (point 11)
+// ═══════════════════════════════════════════════
+function renderAdmin(){
+  const el=document.getElementById('adminContent');if(!el)return;
+  const rarList=Object.keys(EMOJIS);
+  el.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:.8rem">
+
+      <div class="card" style="flex-direction:column;align-items:stretch;gap:.7rem">
+        <div style="font-weight:900;color:#ef4444;font-family:'Bebas Neue';letter-spacing:1px;font-size:1rem">💰 ARGENT</div>
+        <div style="display:flex;gap:.5rem">
+          <input id="adm_money" type="number" placeholder="Montant ex: 1000000" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(239,68,68,.3);border-radius:.6rem;padding:.5rem .8rem;color:#fff;font-size:.85rem">
+          <button class="btn danger sm" onclick="adminGive('money')">DONNER</button>
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+          ${[1e3,1e6,1e9,1e12].map(v=>`<button class="btn ghost sm" style="flex:1;font-size:.65rem" onclick="money+=${v};updateUI();showToast('💰 +${fmt(v)} $','ok')">+${fmt(v)}</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;align-items:stretch;gap:.7rem">
+        <div style="font-weight:900;color:#a855f7;font-family:'Bebas Neue';letter-spacing:1px;font-size:1rem">⭐ RENAISSANCES</div>
+        <div style="display:flex;gap:.5rem">
+          <input id="adm_reb" type="number" placeholder="Nb rebirths à ajouter" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(168,85,247,.3);border-radius:.6rem;padding:.5rem .8rem;color:#fff;font-size:.85rem">
+          <button class="btn purple sm" onclick="adminGive('reb')">DONNER</button>
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;align-items:stretch;gap:.7rem;border:1px solid rgba(57,255,126,.25)">
+        <div style="font-weight:900;color:var(--money);font-family:'Bebas Neue';letter-spacing:1px;font-size:1rem">🎒 AJOUTER EMOJI PRÉCIS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <div>
+            <div style="font-size:.65rem;opacity:.6;margin-bottom:3px">RARETÉ</div>
+            <select id="adm_rar" onchange="adminUpdateEmojiPick()" style="width:100%;background:rgba(255,255,255,.07);border:1px solid var(--gb);border-radius:.6rem;padding:.5rem;color:#fff;font-size:.8rem">
+              ${rarList.map(r=>`<option value="${r}" style="background:#0a0e1a">${r}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <div style="font-size:.65rem;opacity:.6;margin-bottom:3px">ÉMOJI</div>
+            <select id="adm_emoji" style="width:100%;background:rgba(255,255,255,.07);border:1px solid var(--gb);border-radius:.6rem;padding:.5rem;color:#fff;font-size:.8rem">
+              ${EMOJIS['Common'].map(e=>`<option value="${e.s}__${e.n}" style="background:#0a0e1a">${e.s} ${e.n}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.65rem;opacity:.6;margin-bottom:3px">MUTATION</div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <button id="admut_normal" class="btn info sm" style="flex:1;font-size:.65rem" onclick="adminSelectMut('Normal')">Aucune</button>
+            ${MUTS.map(m=>`<button id="admut_${m.name}" class="btn ghost sm" style="flex:1;font-size:.65rem" onclick="adminSelectMut('${m.name}')">${m.name}</button>`).join('')}
+          </div>
+        </div>
+        <button class="btn primary" onclick="adminAddEmoji()" style="padding:.6rem">➕ AJOUTER AU SAC</button>
+      </div>
+
+      <div class="card" style="flex-direction:column;align-items:stretch;gap:.5rem">
+        <div style="font-weight:900;color:var(--og);font-family:'Bebas Neue';letter-spacing:1px;font-size:1rem">🎨 COQUES & 📱 PHONES</div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn gold sm" style="flex:1" onclick="adminGive('skins')">TOUTES LES COQUES</button>
+          <button class="btn primary sm" style="flex:1" onclick="adminGive('phones')">TOUS LES PHONES</button>
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;align-items:stretch;gap:.6rem">
+        <div style="font-weight:900;color:#f97316;font-family:'Bebas Neue';letter-spacing:1px;font-size:1rem">🔥 ÉVÉNEMENT — activer</div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+          ${EVENTS.map(e=>`<button class="btn ghost sm" onclick="adminActivateEvent('${e.key}')" style="flex:1;min-width:calc(50% - .2rem);font-size:.6rem;padding:.4rem .2rem">${evLbl(e)}</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;align-items:stretch;gap:.5rem">
+        <div style="font-weight:900;color:var(--mythique);font-family:'Bebas Neue';letter-spacing:1px;font-size:1rem">📦 EMOJI BLOCK</div>
+        <button class="btn purple" onclick="adminGive('block')" style="padding:.6rem">AJOUTER UN EMOJI BLOCK</button>
+      </div>
+
+      <div class="card" style="flex-direction:column;align-items:stretch;gap:.5rem;border:2px solid rgba(0,212,255,.35)">
+        <div style="font-weight:900;color:var(--accent);font-family:'Bebas Neue';letter-spacing:1px;font-size:1rem">📖 INDEX COMPLET</div>
+        <div style="font-size:.72rem;opacity:.6;line-height:1.5">Débloque tous les émojis dans l'index (toutes raretés × toutes mutations). N'ajoute pas au sac.</div>
+        <button class="btn info" onclick="adminGive('index')" style="padding:.7rem;font-size:.85rem">✅ TOUT DÉBLOQUER L'INDEX</button>
+      </div>
+
+    </div>`;
+  adminSelectedMut='Normal';
+}
+let adminSelectedMut='Normal';
+function adminUpdateEmojiPick(){
+  const rar=document.getElementById('adm_rar').value;
+  const sel=document.getElementById('adm_emoji');
+  sel.innerHTML=EMOJIS[rar].map(e=>`<option value="${e.s}__${e.n}" style="background:#0a0e1a">${e.s} ${e.n}</option>`).join('');
+}
+function adminSelectMut(name){
+  adminSelectedMut=name;
+  document.querySelectorAll('[id^="admut_"]').forEach(b=>{
+    b.className=b.id==='admut_'+name?'btn info sm':'btn ghost sm';
+    b.style.flex='1';b.style.fontSize='.65rem';
+  });
+}
+function adminAddEmoji(){
+  const rar=document.getElementById('adm_rar').value;
+  const val=document.getElementById('adm_emoji').value.split('__');
+  const sym=val[0],name=val.slice(1).join('__');
+  const mut=adminSelectedMut==='Normal'?NO_MUT:(MUTS.find(m=>m.name===adminSelectedMut)||NO_MUT);
+  const slots=effSlots();
+  if(inventory.length>=slots){showToast('Sac plein !','err');return;}
+  inventory.push({symbol:sym,name,rarity:rar,price:RD[rar].p,gain:Math.floor(RD[rar].p*.1*mut.multi),mut,mutCls:mut.cls,mutColor:mut.color,mutGr:mut.gr,color:RD[rar].c,glow:RD[rar].glow,mutName:mut.name==='Normal'?'':mut.name,id:Date.now()});
+  showToast('✅ '+sym+' '+name+(mut.name!=='Normal'?' ['+mut.name+']':'')+' ajouté !','ok');
+  playSFX('buy');updateUI();saveGame();
+}
+function adminGive(type){
+  if(type==='money'){const v=parseFloat(document.getElementById('adm_money').value||0);money+=v;showToast('💰 +'+fmt(v)+' $','ok');}
+  else if(type==='reb'){const v=parseInt(document.getElementById('adm_reb').value||0);rebirthLv+=v;totalSlots+=v;showToast('⭐ +'+v+' rebirths','ok');}
+  else if(type==='skins'){SKINS.forEach(s=>{if(!ownedSkins.includes(s.id))ownedSkins.push(s.id);});INDEX_CASES.forEach(c=>{if(!ownedSkins.includes(c.id))ownedSkins.push(c.id);});showToast('🎨 Toutes les coques (y compris exclusives) débloquées !','ok');}
+  else if(type==='phones'){[...PHONES_BASE,...SHOP_PHONES].forEach(p=>{if(!ownedPhones.includes(p.n))ownedPhones.push(p.n);});showToast('📱 Tous les phones débloqués !','ok');}
+  else if(type==='block'){emojiBlocks.push({id:Date.now()});showToast('📦 Emoji Block ajouté !','ok');}
+  else if(type==='index'){
+    // Unlock every emoji × every mutation tab in the discovered index
+    const tabs=['Normal',...MUTS.map(m=>m.name)];
+    Object.values(EMOJIS).forEach(arr=>{
+      arr.forEach(e=>{
+        tabs.forEach(tab=>{
+          const k=e.n+'__'+tab;
+          if(!discovered[k])discovered[k]=1;
+        });
+      });
+    });
+    showToast('📖 Index complet débloqué ! ('+Object.keys(discovered).length+' entrées)','ok');
+    playSFX('leg');
+  }
+  updateUI();saveGame();
+}
+function adminActivateEvent(key){
+  const ev=EVENTS.find(e=>e.key===key);if(!ev)return;
+  evActive=key;evDef=ev;evPhase=true;evEnd=Date.now()+ev.dur;
+  applyEvBg(ev);showToast('🔥 Événement '+evLbl(ev)+' activé !','ok');
+}
+
+// ═══════════════════════════════════════════════
+// CREDITS
+// ═══════════════════════════════════════════════
+function showCredits(){
+  const credits=[
+    {role:'CRÉATEUR & GAME DESIGN',name:'Nathan',emoji:'👑',color:'#facc15',desc:'Idée originale · Direction créative'},
+    {role:'INTELLIGENCE ARTIFICIELLE',name:'Claude',emoji:'🤖',color:'#00d4ff',desc:'Code · Logique · Corrections · Features'},
+    {role:'INTELLIGENCE ARTIFICIELLE',name:'Gemini',emoji:'💎',color:'#4285f4',desc:'Assistance · Suggestions'},
+    {role:'INTELLIGENCE ARTIFICIELLE',name:'ChatGPT',emoji:'🧠',color:'#10a37f',desc:'Brainstorming · Conception'},
+    {role:'PLATEFORME',name:'Replit',emoji:'🔧',color:'#f26207',desc:'Hébergement · Environnement de dev'},
+  ];
+  const list=document.getElementById('creditsList');
+  list.innerHTML=credits.map((c,i)=>`
+    <div class="credit-row" style="animation-delay:${i*0.1}s;border-color:${c.color}33">
+      <div style="font-size:2rem;flex-shrink:0">${c.emoji}</div>
+      <div style="flex:1;text-align:left">
+        <div style="font-size:.6rem;font-family:'Bebas Neue';letter-spacing:2px;color:${c.color};opacity:.8">${c.role}</div>
+        <div style="font-weight:900;font-size:1rem;font-family:'Bebas Neue';letter-spacing:1px;color:${c.color}">${c.name}</div>
+        <div style="font-size:.68rem;opacity:.5;margin-top:1px">${c.desc}</div>
+      </div>
+    </div>`).join('');
+  const ov=document.getElementById('creditsOv');
+  ov.style.display='flex';
+  playSFX('leg');
+}
+
+function adminActivateEvent(key){
+  const ev=EVENTS.find(e=>e.key===key);if(!ev)return;
+  evActive=key;evDef=ev;evPhase=true;evEnd=Date.now()+ev.dur;
+  applyEvBg(ev);showToast('🔥 Événement '+evLbl(ev)+' activé !','ok');
+}
+
+// ═══════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════
+function applyEvBg(def){
+  const bg=document.getElementById('evBg'),ph=document.getElementById('phone');
+  if(!def){
+    bg.className='';bg.classList.remove('on');
+    ph.classList.remove('ev-border');ph.style.removeProperty('--ec');
+    return;
+  }
+  bg.className='ebg-'+def.bg+' on';
+  ph.classList.add('ev-border');ph.style.setProperty('--ec',def.color);
+}
+function tickEvents(){
+  const now=Date.now(),ban=document.getElementById('banner');
+  if(!evPhase){
+    if(now>=evNext){
+      evPhase=true;
+      evDef=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+      evActive=evDef.key;
+      evEnd=now+evDef.dur;
+      ban.classList.add('ev');
+      applyEvBg(evDef);
+      playSFX('leg');
+      const card=document.querySelector('.bigEv-card');
+      if(card)card.style.background='linear-gradient(135deg,'+evDef.color+'99,'+evDef.color+'44)';
+      document.getElementById('bigEvName').textContent=evLbl(evDef);
+      const bv=document.getElementById('bigEv');bv.style.display='flex';
+      setTimeout(()=>bv.style.display='none',3500);
+    } else {
+      ban.textContent=t('nextEvent')+' '+fmtT(evNext-now);
+    }
+  } else {
+    if(now>=evEnd){
+      evPhase=false;evActive=null;evDef=null;evNext=now+300000;
+      ban.classList.remove('ev');applyEvBg(null);
+    } else {
+      ban.textContent='🔥 '+evLbl(evDef)+' ('+fmtT(evEnd-now)+') 🔥';
+    }
+  }
+  // Shop timer
+  const st=document.getElementById('shopTimer');
+  if(st){
+    if(now>=shopReset){refreshShop();if(document.getElementById('shopPanel').classList.contains('open'))renderShop();}
+    st.textContent=fmtT(Math.max(0,shopReset-now));
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD
+// ═══════════════════════════════════════════════
+const SAVE_KEY='emojiScrollV15';
+function saveGame(){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify({
+      money,inventory,rebirthLv,phoneIdx,totalSlots,stats,
+      ownedPhones,ownedSkins,skinId,discovered,
+      sfxOn,lang,tutDone,
+      shopPhones,shopSkins,shopCodes,shopReset,boughtShopCodes,boughtShopPhones,
+      fusSlots,fusBusy,fusEnd,fusResult,claimed,
+      evActive,evDef,evPhase,evEnd,evNext,
+      confirmSettings,adminUnlocked,emojiBlocks,usedCodes,shopHasBlock
+    }));
+    const ind=document.getElementById('saveInd');
+    if(ind){ind.style.opacity='1';setTimeout(()=>ind.style.opacity='0',1500);}
+  }catch(e){console.warn('Save error',e);}
+}
+function loadGame(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);if(!raw)return;
+    const d=JSON.parse(raw);
+    money=d.money??100;inventory=d.inventory??[];rebirthLv=d.rebirthLv??0;phoneIdx=d.phoneIdx??0;totalSlots=d.totalSlots??4;
+    stats=Object.assign({total:0,scrolls:0,fusions:0,bagFills:0,mutGold:0,mutMaster:0,legFound:0,ogFound:0},d.stats??{});
+    ownedPhones=d.ownedPhones??['Nokia 3310'];ownedSkins=d.ownedSkins??['grey'];skinId=d.skinId??'grey';
+    discovered=d.discovered??{};sfxOn=d.sfxOn??true;lang=d.lang??'fr';tutDone=d.tutDone??false;
+    shopPhones=d.shopPhones??[];shopSkins=d.shopSkins??[];shopCodes=d.shopCodes??[];shopReset=d.shopReset??Date.now()+120000;shopHasBlock=d.shopHasBlock??false;
+    boughtShopCodes=d.boughtShopCodes??[];boughtShopPhones=d.boughtShopPhones??[];
+    fusSlots=d.fusSlots??[null,null];fusBusy=d.fusBusy??false;fusEnd=d.fusEnd??null;fusResult=d.fusResult??null;claimed=d.claimed??[];
+    evActive=d.evActive??null;evDef=d.evDef??null;evPhase=d.evPhase??false;evEnd=d.evEnd??0;evNext=d.evNext??Date.now()+60000;
+    confirmSettings=Object.assign({mythique:true,exotique:true,og:true,master:true},d.confirmSettings??{});
+    adminUnlocked=d.adminUnlocked??false;
+    emojiBlocks=d.emojiBlocks??[];
+    usedCodes=d.usedCodes??[];
+    if(fusBusy&&fusEnd&&fusEnd<Date.now())fusBusy=false;
+    if(evPhase&&evDef)applyEvBg(evDef);
+    const sb=document.getElementById('sfxBtn');if(sb){sb.textContent=sfxOn?'ON':'OFF';sb.className='btn '+(sfxOn?'primary':'danger');}
+    if(!shopPhones.length||!shopCodes.length||!shopSkins.length)refreshShop();
+  }catch(e){console.warn('Load error',e);}
+}
+
+// ═══════════════════════════════════════════════
+// SFX TOGGLE
+// ═══════════════════════════════════════════════
+function toggleSFX(){
+  sfxOn=!sfxOn;
+  const b=document.getElementById('sfxBtn');
+  b.textContent=sfxOn?'ON':'OFF';b.className='btn '+(sfxOn?'primary':'danger');
+  saveGame();
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+function askReset(){
+  showModal('⚠️ RESET',t('resetConfirm'),[
+    {text:t('no'),cls:'ghost'},
+    {text:t('yes'),cls:'danger',fn:()=>{
+      localStorage.removeItem(SAVE_KEY);
+      // Réinitialisation complète de toutes les variables avant reload
+      shopPhones=[];shopSkins=[];shopCodes=[];shopHasBlock=false;
+      boughtShopCodes=[];boughtShopPhones=[];
+      shopReset=Date.now()+120000;
+      window.location.reload();
+    }}
+  ],'⚠️');
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function initGame(){
+  loadGame();
+  initParts();
+  applySkin();
+  updateUI();
+  updateAllTexts();
+  // Si sauvegarde existante, passer le splash automatiquement
+  if(tutDone){
+    const s=document.getElementById('splash');
+    if(s){s.style.display='none';}
+    document.getElementById('banner').style.display='';
+    document.querySelector('.hud').style.display='';
+    document.querySelector('.main-cont').style.display='';
+    document.querySelector('.bot-nav').style.display='';
+    setTimeout(()=>{if(musicOn)initMusic();},500);
+  }
+  // Autosave every 5s
+  setInterval(saveGame,5000);
+}
+
+// ═══════════════════════════════════════════════
+// MAIN LOOP — 100ms tick
+// ═══════════════════════════════════════════════
+setInterval(()=>{
+  const earned=getIncome()/10;
+  money+=earned;
+  stats.total+=earned;
+  // Fusion timer
+  if(fusBusy&&fusEnd&&Date.now()>=fusEnd){
+    fusBusy=false;
+    if(document.getElementById('fusionPanel').classList.contains('open'))updateFusSt();
+  }
+  tickEvents();
+  updateUI();
+},100);
+
+// Start
+initGame();
+</script>
+<!-- CREDITS OVERLAY -->
+<div id="creditsOv" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:11000;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);padding:20px" onclick="this.style.display='none'">
+  <div id="creditsBox" onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0e1629,#141c32);border:2px solid rgba(250,204,21,.4);border-radius:2rem;padding:2rem 2.5rem;width:100%;max-width:420px;text-align:center;box-shadow:0 0 80px rgba(250,204,21,.15);animation:creditsIn .5s cubic-bezier(.175,.885,.32,1.275)">
+    <div style="font-size:3rem;margin-bottom:.5rem">🎮</div>
+    <div style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:4px;background:linear-gradient(135deg,#facc15,#f97316,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.2rem">EMOJI SCROLL</div>
+    <div style="font-family:'Bebas Neue';font-size:.8rem;letter-spacing:3px;opacity:.5;margin-bottom:1.8rem">ULTRA EDITION</div>
+    <div style="font-family:'Bebas Neue';font-size:.7rem;letter-spacing:3px;color:#facc15;opacity:.7;margin-bottom:1rem">— CRÉDITS —</div>
+    <div id="creditsList" style="display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.8rem"></div>
+    <div style="font-size:.65rem;opacity:.35;letter-spacing:1px;font-family:'Bebas Neue'">MERCI D'AVOIR JOUÉ ✨</div>
+    <button class="btn ghost" style="margin-top:1.2rem;width:100%;padding:.7rem;font-size:.8rem" onclick="document.getElementById('creditsOv').style.display='none'">✕ FERMER</button>
+  </div>
+</div>
+
+</body>
+</html>
